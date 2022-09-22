@@ -1,0 +1,6 @@
+add_subdirectory(csg)
+add_subdirectory(gpu)
+add_subdirectory(hmesh)
+add_subdirectory(hyplib)
+add_subdirectory(io)
+add_subdirectory(windowmanager)
