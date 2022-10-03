@@ -9,7 +9,7 @@
 namespace hpr::gpu
 {
 
-class ShaderProgram : Context
+class ShaderProgram : public Context
 {
 
 protected:
