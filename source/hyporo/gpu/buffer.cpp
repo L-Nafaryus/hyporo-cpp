@@ -22,7 +22,14 @@ Buffer::Buffer(DeviceAPI api) :
 Buffer::~Buffer()
 {}
 
-const BufferType Buffer::type() const
+// Member functions
+
+int Buffer::size() const
+{
+    return p_size;
+}
+
+Buffer::BufferType Buffer::type() const
 {
     return p_type;
 }

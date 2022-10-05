@@ -1,6 +1,8 @@
 
 #include "buffer.hpp"
 
+#include <glad/glad.h>
+
 
 namespace hpr::gpu::opengl
 {
@@ -14,14 +16,16 @@ Buffer::Buffer() :
 Buffer::~Buffer()
 {}
 
-const int Buffer::target() const
+int Buffer::target() const
 {
     switch (p_type)
     {
         case BufferType::Vertex:
             return GL_ARRAY_BUFFER;
         case BufferType::Index:
-            return GL_ELEMENT_INDEX_BUFFER;
+            return GL_ELEMENT_ARRAY_BUFFER;
+        default:
+            return GL_NONE;
     }
 }
 

@@ -15,9 +15,12 @@ add_library(hyporo-hyplib STATIC
     vector/vector.hpp
     matrix/MatrixSpace.hpp
     matrix/matrix.hpp
+    io/file.hpp
+    io/io.hpp
 
     # Source files
     scalar/scalar.cpp
+    io/file.cpp
 )
 
 if(WITH_GTESTS)

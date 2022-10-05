@@ -11,6 +11,7 @@ namespace hpr::gpu
 
 class ShaderProgram : public Context
 {
+    friend class Device;
 
 protected:
 

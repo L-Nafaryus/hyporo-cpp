@@ -17,6 +17,8 @@ if(WITH_GTESTS)
     include(GoogleTest)
 endif()
 
+
+include(${CMAKE_SOURCE_DIR}/cmake/glad.cmake)
 add_definitions(-DPRECISION_FLOAT)
 
 add_subdirectory(source)

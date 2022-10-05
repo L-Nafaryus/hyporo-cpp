@@ -21,6 +21,7 @@ public:
     {
         Front,
         Back,
+        FrontAndBack,
         None
     };
 
@@ -30,6 +31,10 @@ protected:
     std::vector<Shader> p_shaders;
     std::vector<ShaderProgram> p_shaderPrograms;
     std::vector<Texture> p_textures;
+
+    Buffer* p_currentVertexBuffer;
+    Buffer* p_currentIndexBuffer;
+    ShaderProgram* p_currentShaderProgram;
 
 protected:
 
@@ -64,14 +69,14 @@ public:
     virtual void createIndexBuffer(Buffer **buffer, int size, char* data) = 0;
     virtual void useVertexBuffer(Buffer* buffer, int stride, int offset);
     virtual void useIndexBuffer(Buffer* buffer, int offset);
-    virtual bool destroyBuffer(Buffer*& buffer);
+    virtual void destroyBuffer(Buffer*& buffer);
 
     // Shaders
 
     virtual void createVertexShader(Shader** shader, const std::string& filename, const std::string& label) = 0;
     virtual void createFragmentShader(Shader** shader, const std::string& filename, const std::string& label) = 0;
     virtual void createGeometryShader(Shader** shader, const std::string& filename, const std::string& label) = 0;
-    virtual bool destroyShader(Shader*& shader);
+    virtual void destroyShader(Shader*& shader);
 
     // Shader programs
 
@@ -84,7 +89,7 @@ public:
     // Textures
 
     virtual void createTexture(Texture** texture, const std::string& filename) = 0;
-    virtual void useTexture(Texture* texture, int slot);
+    virtual void useTexture(Texture* texture, int slot) = 0;
     virtual void destroyTexture(Texture*& texture);
 };
 

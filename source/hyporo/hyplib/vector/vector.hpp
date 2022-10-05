@@ -1,3 +1,5 @@
+#pragma once
+
 #include "scalar.hpp"
 #include "VectorSpace.hpp"
 

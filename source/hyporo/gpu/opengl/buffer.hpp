@@ -24,7 +24,7 @@ public:
 
     // Member functions
 
-    const int target() const;
+    int target() const;
 };
 
 }

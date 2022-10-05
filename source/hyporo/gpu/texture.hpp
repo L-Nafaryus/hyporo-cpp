@@ -28,11 +28,11 @@ public:
 
     // Member functions
 
-    const std::string filename() const();
+    std::string filename() const;
 
-    const int width() const;
+    int width() const;
 
-    const int height() const;
+    int height() const;
 };
 
 } // end namespace hpr::gpu

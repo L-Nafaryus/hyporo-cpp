@@ -10,6 +10,7 @@ namespace hpr::gpu
 
 class Buffer : public Context
 {
+    friend class Device;
 
 public:
 
@@ -39,9 +40,9 @@ public:
 
     // Member functions
 
-    const int size() const;
+    int size() const;
 
-    const BufferType type() const;
+    BufferType type() const;
 };
 
 } // end namespace hpr::gpu

@@ -23,4 +23,19 @@ Texture::Texture(DeviceAPI api) :
 Texture::~Texture()
 {}
 
+std::string Texture::filename() const
+{
+    return p_filename;
+}
+
+int Texture::width() const
+{
+    return p_width;
+}
+
+int Texture::height() const
+{
+    return p_height;
+}
+
 }

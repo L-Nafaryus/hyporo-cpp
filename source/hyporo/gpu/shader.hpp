@@ -10,10 +10,7 @@ namespace hpr::gpu
 
 class Shader : public Context
 {
-protected:
-
-    std::string p_filename;
-    std::string p_label;
+    friend class Device;
 
 public:
 
@@ -24,6 +21,14 @@ public:
         Fragment,
         ShaderTypeCount
     };
+
+protected:
+
+    std::string p_filename;
+    std::string p_label;
+    ShaderType p_type;
+
+public:
 
     // Constructors
 
@@ -39,7 +44,7 @@ public:
 
     const std::string label() const;
 
-    const ShaderType shaderType() const;
+    const ShaderType type() const;
 };
 
 } // end namespace hpr::gpu
