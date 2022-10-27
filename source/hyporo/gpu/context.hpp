@@ -28,7 +28,8 @@ public:
 
     Context(DeviceAPI api);
 
-    virtual ~Context();
+    virtual
+    ~Context();
 
     // Member functions
 

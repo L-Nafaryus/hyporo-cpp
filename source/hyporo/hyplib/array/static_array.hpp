@@ -2,6 +2,8 @@
 
 #include "iterator.hpp"
 #include <limits>
+#include <functional>
+
 
 namespace hpr
 {
@@ -20,7 +22,7 @@ public:
     using iterator = Iterator<Type>;
     using const_pointer = Type const*;
     using const_reference = Type const&;
-    using const_iterator = Iterator<Type> const;
+    using const_iterator = Iterator<const Type>;
 
 protected:
 
@@ -64,12 +66,50 @@ public:
     }
 
     inline
-    StaticArray(std::initializer_list<value_type> list) :
-            p_size {Size},
-            p_start {new value_type[p_size]},
-            p_end {p_start + p_size}
+    StaticArray(const_iterator start, const_iterator end) :
+        p_size {Size},
+        p_start {new value_type[p_size]},
+        p_end {p_start + p_size}
     {
-        std::copy(list.begin(), list.end(), p_start);
+        std::copy(start, end, p_start);
+    }
+
+    inline
+    StaticArray(iterator start, iterator end) :
+        p_size {Size},
+        p_start {new value_type[p_size]},
+        p_end {p_start + p_size}
+    {
+        std::copy(start, end, p_start);
+    }
+
+    inline
+    StaticArray(std::initializer_list<value_type> list) :
+        StaticArray {list.begin(), list.end()}
+    {}
+
+    template <std::convertible_to<value_type>... Args>
+    inline
+    StaticArray(value_type&& v, Args&& ...args) :
+        StaticArray {std::initializer_list<value_type>({v, static_cast<value_type>(args)...})}
+    {
+        static_assert(1 + sizeof...(args) == Size, "Number of arguments must be equal to size of array");
+    }
+
+    template <size_type SubSize, std::convertible_to<value_type>... Args>
+    inline
+    StaticArray(const StaticArray<value_type, SubSize>& subarr, const value_type& v, const Args& ...args) :
+        p_size {Size},
+        p_start {new value_type[p_size]},
+        p_end {p_start + p_size}
+    {
+        static_assert(SubSize + 1 + sizeof...(args) == Size,
+            "Number of arguments and sub-array elements must be equal to size of main array");
+        std::initializer_list<value_type> list {v, static_cast<value_type>(args)...};
+        std::copy(subarr.begin(), subarr.end(), begin());
+        size_type pos {subarr.size()};
+        for (auto& val : list)
+            (*this)[pos++] = val;
     }
 
     inline
@@ -165,9 +205,17 @@ public:
     friend
     void swap(StaticArray& lhs, StaticArray& rhs)
     {
-        lhs.p_size = rhs.p_size;
         std::swap(lhs.p_start, rhs.p_start);
         std::swap(lhs.p_end, rhs.p_end);
+    }
+
+    friend
+    bool operator==(const StaticArray& lhs, const StaticArray& rhs)
+    {
+        for (auto n = 0; n < Size; ++n)
+            if (lhs[n] != rhs[n])
+                return false;
+        return true;
     }
 };
 

@@ -3,7 +3,7 @@
 #include "context.hpp"
 #include "shader.hpp"
 
-#include <array>
+#include "../hyplib/array/array.hpp"
 
 
 namespace hpr::gpu
@@ -15,7 +15,7 @@ class ShaderProgram : public Context
 
 protected:
 
-    std::array<Shader*, (size_t)Shader::ShaderType::ShaderTypeCount> p_slots;
+    sarray<Shader*, (size_t)Shader::ShaderType::ShaderTypeCount> p_slots;
     bool p_isLinked;
 
 public:

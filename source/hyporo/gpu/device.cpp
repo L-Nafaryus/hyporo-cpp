@@ -8,16 +8,16 @@ namespace hpr::gpu
 
 Device::Device() :
     Context {DeviceAPI::Unknown},
-    p_currentVertexBuffer {nullptr},
-    p_currentIndexBuffer {nullptr},
-    p_currentShaderProgram {nullptr}
+    p_currentVertexBuffer {},
+    p_currentIndexBuffer {},
+    p_currentShaderProgram {}
 {}
 
 Device::Device(DeviceAPI api) :
     Context {api},
-    p_currentVertexBuffer {nullptr},
-    p_currentIndexBuffer {nullptr},
-    p_currentShaderProgram {nullptr}
+    p_currentVertexBuffer {},
+    p_currentIndexBuffer {},
+    p_currentShaderProgram {}
 {}
 
 Device::~Device()
@@ -28,16 +28,16 @@ Device::~Device()
 void Device::create(Device** device, DeviceAPI api)
 {
     if (device == nullptr)
-        throw "Invalid parameter";
+        throw std::invalid_argument("Invalid parameter 'nullptr'");
     if (api == DeviceAPI::Unknown)
-        throw "Invalid parameter";
+        throw std::invalid_argument("Cannot create device for 'Unknown'");
 
     *device = nullptr;
 
     if (api == DeviceAPI::OpenGL)
         *device = new opengl::Device;
     else
-        throw "Unsupported device";
+        throw std::invalid_argument("Unsupported device");
 }
 
 // Buffers

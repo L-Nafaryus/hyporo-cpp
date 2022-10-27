@@ -6,7 +6,7 @@
 #include "shader_program.hpp"
 #include "texture.hpp"
 
-#include <vector>
+#include "../hyplib/array/array.hpp"
 
 
 namespace hpr::gpu
@@ -27,10 +27,10 @@ public:
 
 protected:
 
-    std::vector<Buffer> p_buffers;
-    std::vector<Shader> p_shaders;
-    std::vector<ShaderProgram> p_shaderPrograms;
-    std::vector<Texture> p_textures;
+    darray<Buffer> p_buffers;
+    darray<Shader> p_shaders;
+    darray<ShaderProgram> p_shaderPrograms;
+    darray<Texture> p_textures;
 
     Buffer* p_currentVertexBuffer;
     Buffer* p_currentIndexBuffer;

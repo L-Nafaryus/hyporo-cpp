@@ -19,7 +19,7 @@ public:
 
     Device();
 
-    ~Device();
+    ~Device() override;
 
 
     // Member functions

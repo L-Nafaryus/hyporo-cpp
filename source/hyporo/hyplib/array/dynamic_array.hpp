@@ -255,6 +255,35 @@ public:
         ++p_end;
     }
 
+    virtual
+    int findByAddress(const value_type& value)
+    {
+        for (int n = 0; n < p_size; ++n)
+            if (std::addressof(*(p_start + n)) == std::addressof(value))
+                return n;
+        return -1;
+    }
+
+    virtual
+    void remove(size_type position)
+    {
+        for (size_type n = position; n < p_size - 1; ++n)
+            *(p_start + n) = std::move(*(p_start + n + 1));
+        std::destroy_at(p_end);
+        --p_end;
+        --p_size;
+    }
+
+    virtual
+    void remove(const value_type& value)
+    {
+        size_type index = findByAddress(value);
+        if (index != -1)
+            remove(index);
+        else
+            throw std::runtime_error("Value is not found to remove it");
+    }
+
     // Friend functions
 
     friend

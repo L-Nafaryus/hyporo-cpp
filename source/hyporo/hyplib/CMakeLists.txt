@@ -10,7 +10,6 @@ include_directories(
 add_library(hyporo-hyplib STATIC
 
     # Header files
-    integer/integer.hpp
     scalar/scalar.hpp
 
     array/iterator.hpp
@@ -20,26 +19,31 @@ add_library(hyporo-hyplib STATIC
 
     vector/vector_space.hpp
 
-    vector/VectorSpace.hpp
     vector/vector.hpp
 
-    matrix/MatrixSpace.hpp
+    matrix/matrix_space.hpp
+
     matrix/matrix.hpp
 
     io/file.hpp
     io/io.hpp
 
     # Source files
-    scalar/scalar.cpp
     io/file.cpp
+
+        matrix/matrix_space.cpp
 )
 
 if(WITH_GTESTS)
     add_executable(hyporo-hyplib-test
         tests/hyplib-test.cpp
+
+            matrix/matrix_space.hpp
     )
 
     target_link_libraries(hyporo-hyplib-test
+
+            hyporo-hyplib
         GTest::gtest_main
     )
 
