@@ -258,9 +258,11 @@ public:
     virtual
     int findByAddress(const value_type& value)
     {
-        for (int n = 0; n < p_size; ++n)
-            if (std::addressof(*(p_start + n)) == std::addressof(value))
+        // TODO: make better approach
+        for (int n = 0; n < p_size; ++n) {
+            if (*std::addressof(*(p_start + n)) == *std::addressof(value))
                 return n;
+        }
         return -1;
     }
 
@@ -277,7 +279,7 @@ public:
     virtual
     void remove(const value_type& value)
     {
-        size_type index = findByAddress(value);
+        int index = findByAddress(value);
         if (index != -1)
             remove(index);
         else

@@ -15,6 +15,17 @@ Monitor::Monitor() :
     p_logicalHeight {0}
 {}
 
+Monitor::Monitor(Provider provider) :
+        WindowContext(provider),
+        p_deviceName {},
+        p_originX {0},
+        p_originY {0},
+        p_width {0},
+        p_height {0},
+        p_logicalWidth {0},
+        p_logicalHeight {0}
+{}
+
 Monitor::~Monitor() = default;
 
 void Monitor::origin(int x, int y)

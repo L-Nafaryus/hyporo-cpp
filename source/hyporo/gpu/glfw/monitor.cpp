@@ -1,5 +1,14 @@
-//
-// Created by L-Nafaryus on 10/27/2022.
-//
-
 #include "monitor.hpp"
+
+
+namespace hpr::gpu::glfw
+{
+
+Monitor::Monitor() :
+    gpu::Monitor {Provider::GLFW},
+    p_instance {nullptr}
+{}
+
+Monitor::~Monitor() = default;
+
+}

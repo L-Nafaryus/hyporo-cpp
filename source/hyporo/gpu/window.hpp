@@ -50,6 +50,8 @@ public:
 
     Window();
 
+    Window(Provider provider);
+
     virtual
     ~Window();
 
@@ -62,7 +64,7 @@ public:
     void init(const std::string& title, Style style, Window* parent, Monitor* monitor);
 
     virtual
-    void state(State state = State::Visible);
+    void state(State state);
 
     virtual
     void close();

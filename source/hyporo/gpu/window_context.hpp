@@ -34,6 +34,11 @@ public:
     virtual
     ~WindowContext() = default;
 
+    bool checkCompability(const WindowContext* ctx) const
+    {
+        return (ctx != nullptr) ? ctx->p_provider == p_provider : true;
+    }
+
 };
 
 }

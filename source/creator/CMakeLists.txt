@@ -14,4 +14,5 @@ add_executable(hyporo
 
 target_link_libraries(hyporo
     PUBLIC
-    hyporo-hyplib)
+    hyporo-gpu
+        imgui)

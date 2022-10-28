@@ -7,8 +7,6 @@ project(
     LANGUAGES CXX
 )
 
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
 
 option(WITH_GTESTS "Enable GTest unit testing" ON)
 
@@ -21,6 +19,10 @@ endif()
 
 
 include(${CMAKE_SOURCE_DIR}/cmake/glad.cmake)
+include(${CMAKE_SOURCE_DIR}/cmake/imgui.cmake)
+
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
 add_definitions(-DPRECISION_FLOAT)
 
 add_subdirectory(source)

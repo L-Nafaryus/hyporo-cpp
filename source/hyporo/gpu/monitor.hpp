@@ -8,7 +8,7 @@
 namespace hpr::gpu
 {
 
-class Monitor : WindowContext
+class Monitor : public WindowContext
 {
 
 protected:
@@ -24,6 +24,8 @@ protected:
 public:
 
     Monitor();
+
+    Monitor(Provider provider);
 
     virtual
     ~Monitor();

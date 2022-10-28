@@ -19,6 +19,21 @@ Window::Window() :
     p_isResizing {false}
 {}
 
+Window::Window(Provider provider) :
+        WindowContext(provider),
+        p_width {0},
+        p_height {0},
+        p_posX {0},
+        p_posY {0},
+        p_title {},
+        p_state {State::Hidden},
+        p_style {Style::Unknown},
+        p_parent {nullptr},
+        p_monitor {nullptr},
+        p_isActive {true},
+        p_isResizing {false}
+{}
+
 Window::~Window() = default;
 
 void Window::init(const std::string& title, Style style, int x, int y, int width, int height, Window* parent, Monitor* monitor)

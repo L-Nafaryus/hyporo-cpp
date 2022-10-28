@@ -15,17 +15,13 @@ WindowSystem::WindowSystem(Provider provider) :
 
 WindowSystem::~WindowSystem() = default;
 
-void WindowSystem::create(WindowSystem** ws, Provider provider)
+WindowSystem* WindowSystem::create(Provider provider)
 {
-    if (ws == nullptr)
-        throw std::invalid_argument("Invalid parameter 'nullptr'");
     if (provider == Provider::Unknown)
         throw std::invalid_argument("Cannot create window system from 'Unknown' provider");
 
-    *ws = nullptr;
-
     if (provider == Provider::GLFW)
-        *ws = new glfw::WindowSystem;
+        return new glfw::WindowSystem;
     else
         throw std::invalid_argument("Unsupported window system");
 }
@@ -36,7 +32,7 @@ void WindowSystem::destroy(WindowSystem*& ws)
     ws = nullptr;
 }
 
-Window& WindowSystem::window(int index)
+Window* WindowSystem::window(int index)
 {
     return p_windows[index];
 }
@@ -48,16 +44,18 @@ void WindowSystem::closeWindow(Window* window)
 
 void WindowSystem::destroyWindow(Window* window)
 {
-    p_windows.remove(*window);
+    p_windows.remove(window);
+    window->close();
+    window = nullptr;
 }
 
-Monitor& WindowSystem::monitor(int index)
+Monitor* WindowSystem::monitor(int index)
 {
     return p_monitors[index];
 }
 
 void WindowSystem::destroyMonitor(Monitor* monitor)
 {
-    p_monitors.remove(*monitor);
+    p_monitors.remove(monitor);
 }
 }

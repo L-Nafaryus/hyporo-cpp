@@ -10,13 +10,13 @@
 namespace hpr::gpu
 {
 
-class WindowSystem : WindowContext
+class WindowSystem : public WindowContext
 {
 
 protected:
 
-    darray<Window> p_windows;
-    darray<Monitor> p_monitors;
+    darray<Window*> p_windows;
+    darray<Monitor*> p_monitors;
 
 protected:
 
@@ -32,7 +32,7 @@ public:
     // Global functions
 
     static
-    void create(WindowSystem** ws, Provider provider);
+    WindowSystem* create(Provider provider);
 
     static
     void destroy(WindowSystem*& ws);
@@ -40,9 +40,9 @@ public:
     // Window interface
 
     virtual
-    void newWindow(Window** window) = 0;
+    Window* newWindow() = 0;
 
-    Window& window(int index);
+    Window* window(int index);
 
     void closeWindow(Window* window);
 
@@ -50,10 +50,10 @@ public:
 
     // Monitor interface
 
-    virtual
-    void newMonitor(Monitor** monitor) = 0;
+    //virtual
+    //void newMonitor(Monitor** monitor) = 0;
 
-    Monitor& monitor(int index);
+    Monitor* monitor(int index);
 
     void destroyMonitor(Monitor* monitor);
 
