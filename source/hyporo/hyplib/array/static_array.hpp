@@ -91,8 +91,18 @@ public:
 
     template <std::convertible_to<value_type>... Args>
     inline
+    StaticArray(const value_type& v, const Args& ...args) :
+        StaticArray {std::initializer_list<value_type>({std::forward<value_type>(v),
+            std::forward<value_type>(static_cast<value_type>(args))...})}
+    {
+        static_assert(1 + sizeof...(args) == Size, "Number of arguments must be equal to size of array");
+    }
+
+    template <std::convertible_to<value_type>... Args>
+    inline
     StaticArray(value_type&& v, Args&& ...args) :
-        StaticArray {std::initializer_list<value_type>({v, static_cast<value_type>(args)...})}
+        StaticArray {std::initializer_list<value_type>({std::forward<value_type>(v),
+            std::forward<value_type>(static_cast<value_type>(args))...})}
     {
         static_assert(1 + sizeof...(args) == Size, "Number of arguments must be equal to size of array");
     }
@@ -111,6 +121,13 @@ public:
         size_type pos {subarr.size()};
         for (auto& val : list)
             (*this)[pos++] = val;
+    }
+
+    inline
+    StaticArray& operator=(const StaticArray& vs) noexcept
+    {
+        std::copy(vs.begin(), vs.end(), begin());
+        return *this;
     }
 
     inline

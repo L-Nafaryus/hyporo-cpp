@@ -2,6 +2,9 @@
 
 #include "iterator.hpp"
 #include <limits>
+#include <memory>
+#include <functional>
+
 
 namespace hpr
 {
@@ -69,6 +72,31 @@ public:
         p_storage_end {p_start + p_capacity}
     {
         std::copy(list.begin(), list.end(), p_start);
+    }
+
+    inline
+    DynamicArray(size_type size, value_type value) :
+        p_size {size},
+        p_capacity {size},
+        p_start {new value_type[p_capacity]},
+        p_end {p_start + p_size},
+        p_storage_end {p_start + p_capacity}
+    {
+        for (auto n = 0; n < p_size; ++n)
+            *(p_start + n) = value;
+    }
+
+    inline
+    DynamicArray& operator=(const DynamicArray& vs) noexcept
+    {
+        delete[] p_start;
+        p_size = vs.p_size;
+        p_capacity = vs.p_size;
+        p_start = new value_type[p_capacity];
+        p_end = p_start + p_size;
+        p_storage_end = p_start + p_capacity;
+        std::copy(vs.begin(), vs.end(), begin());
+        return *this;
     }
 
     inline
@@ -255,16 +283,19 @@ public:
         ++p_end;
     }
 
-    virtual
+    /*virtual
     int findByAddress(const value_type& value)
     {
         // TODO: make better approach
         for (int n = 0; n < p_size; ++n) {
-            if (*std::addressof(*(p_start + n)) == *std::addressof(value))
+            std::equal_to
+            pointer lhs = (p_start + n); //*std::addressof(*(p_start + n));
+            pointer rhs = *value; //*std::addressof(value);
+            if (lhs == rhs)
                 return n;
         }
         return -1;
-    }
+    }*/
 
     virtual
     void remove(size_type position)
@@ -277,6 +308,31 @@ public:
     }
 
     virtual
+    void remove(iterator position)
+    {
+        if (position + 1 != end())
+            std::copy(position + 1, end(), position);
+        std::destroy_at(p_end);
+        --p_end;
+        --p_size;
+    }
+
+    virtual
+    void remove(const std::function<bool(value_type)>& condition)
+    {
+        size_type newSize = p_size;
+        for (size_type offset = 0; offset < newSize; ++offset)
+            if (condition(*(p_start + offset))) {
+                for (size_type n = offset; n < newSize; ++n) {
+                    *(p_start + n) = std::move(*(p_start + n + 1));
+                }
+                --newSize;
+                --offset;
+            }
+        p_size = newSize;
+        p_end = p_start + p_size;
+    }
+    /*virtual
     void remove(const value_type& value)
     {
         int index = findByAddress(value);
@@ -284,6 +340,17 @@ public:
             remove(index);
         else
             throw std::runtime_error("Value is not found to remove it");
+    }*/
+
+    virtual
+    void clear()
+    {
+        delete[] p_start;
+        p_size = 0;
+        p_capacity = 1;
+        p_start = new value_type[p_capacity];
+        p_end = p_start;
+        p_storage_end = p_end + p_capacity;
     }
 
     // Friend functions
@@ -296,6 +363,15 @@ public:
         std::swap(lhs.p_start, rhs.p_start);
         std::swap(lhs.p_end, rhs.p_end);
         std::swap(lhs.p_storage_end, rhs.p_storage_end);
+    }
+
+    friend
+    bool operator==(const DynamicArray& lhs, const DynamicArray& rhs)
+    {
+        for (auto n = 0; n < lhs.size(); ++n)
+            if (lhs[n] != rhs[n])
+                return false;
+        return true;
     }
 };
 

@@ -36,8 +36,21 @@ public:
 
     inline
     VectorSpace(VectorSpace&& vs) noexcept :
-        base {std::move(static_cast<base>(vs))}
+        base {std::forward<base>(static_cast<base>(vs))}
     {}
+
+    inline
+    VectorSpace& operator=(const VectorSpace& vs) noexcept = default;
+
+    inline
+    VectorSpace& operator=(VectorSpace&& vs) noexcept
+    {
+        std::swap(*this, vs);
+        return *this;
+    }
+
+    virtual
+    ~VectorSpace() = default;
 
     inline
     VectorSpace(typename base::iterator start, typename base::iterator end) :
@@ -75,7 +88,7 @@ public:
     {
         for (auto n = 0; n < subvs.size(); ++n)
             (*this)[n] = subvs[n];
-        (*this)[subvs.size() - 1] = v;
+        (*this)[subvs.size()] = v;
     }
 
     // Member functions
@@ -123,10 +136,8 @@ public:
             v /= val;
     }
 
-    using type = VectorSpace<Type, Size>;
-
     friend inline
-    type operator+(const VectorSpace& lhs, const value_type& rhs)
+    VectorSpace operator+(const VectorSpace& lhs, const value_type& rhs)
     {
         VectorSpace vs {lhs};
         vs += rhs;

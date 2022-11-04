@@ -72,12 +72,21 @@ public:
         return temp;
     }
 
-    friend bool operator==(const iterator& lhs, const iterator& rhs)
+    iterator operator+(int value)
+    {
+        iterator temp {*this};
+        temp.p_ptr += value;
+        return temp;
+    }
+
+    friend
+    bool operator==(const iterator& lhs, const iterator& rhs)
     {
         return lhs.p_ptr == rhs.p_ptr;
     }
 
-    friend bool operator!=(const iterator& lhs, const iterator& rhs)
+    friend
+    bool operator!=(const iterator& lhs, const iterator& rhs)
     {
         return lhs.p_ptr != rhs.p_ptr;
     }

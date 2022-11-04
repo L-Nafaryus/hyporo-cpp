@@ -9,14 +9,10 @@ include_directories(
 add_library(hyporo-hmesh STATIC
 
     # Header files
-    Vertex.hpp
-    Edge.hpp
-    Face.hpp
-    Cell.hpp
-    Mesh.hpp
+        mesh.hpp
 
     # Source files
-    Mesh.cpp
+        mesh.cpp
 )
 
 if(WITH_GTESTS)

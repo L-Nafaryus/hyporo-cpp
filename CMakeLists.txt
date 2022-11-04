@@ -1,12 +1,14 @@
 cmake_minimum_required (VERSION 3.16)
 
 
+include(${CMAKE_SOURCE_DIR}/cmake/glad.cmake)
+include(${CMAKE_SOURCE_DIR}/cmake/imgui.cmake)
+
 project(
     hyporo
     VERSION 0.20.0
     LANGUAGES CXX
 )
-
 
 option(WITH_GTESTS "Enable GTest unit testing" ON)
 
@@ -18,8 +20,6 @@ if(WITH_GTESTS)
 endif()
 
 
-include(${CMAKE_SOURCE_DIR}/cmake/glad.cmake)
-include(${CMAKE_SOURCE_DIR}/cmake/imgui.cmake)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
