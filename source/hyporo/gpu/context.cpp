@@ -13,8 +13,7 @@ Context::Context(DeviceAPI api) :
     p_api {api}
 {}
 
-Context::~Context() 
-{}
+Context::~Context() = default;
 
 bool Context::checkCompability(const Context* ctx) const
 {

@@ -2,9 +2,6 @@
 
 #include "../window_system.hpp"
 
-#include <GLFW/glfw3.h>
-#include <functional>
-
 
 namespace hpr::gpu::glfw
 {
@@ -20,7 +17,6 @@ public:
 
     gpu::Window* newWindow() override;
 
-    std::function<GLFWglproc(const char*)> deviceProcAddress() const;
 };
 
 }

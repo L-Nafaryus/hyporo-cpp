@@ -168,7 +168,7 @@ public:
         else {
             auto res = 0;
             for (auto m = 0; m < Cols; ++m)
-                res += pow(-1, m) * (*this)(0, m) * minor(0, m).det();
+                res += std::pow(-1, m) * (*this)(0, m) * minor(0, m).det();
             return res;
         }
     }
@@ -190,7 +190,7 @@ public:
         for (auto n = 0; n < Rows; ++n)
             for (auto k = 0; k < Cols; ++k)
             {
-                ms(n, k) = pow(-1, n + k) * minor(n, k).det();
+                ms(n, k) = std::pow(-1, n + k) * minor(n, k).det();
             }
         return ms.transpose();
     }

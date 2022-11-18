@@ -13,7 +13,6 @@ Shader::Shader() :
     p_shaderIndex {0}
 {}
 
-Shader::~Shader()
-{}
+Shader::~Shader() = default;
 
 }

@@ -6,10 +6,11 @@ include_directories(
     ../hyplib/vector
 )
 
-add_library(hyporo-hmesh STATIC
+add_library(hyporo-mesh STATIC
 
     # Header files
         mesh.hpp
+        vertex.hpp
 
     # Source files
         mesh.cpp

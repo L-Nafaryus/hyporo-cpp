@@ -20,8 +20,7 @@ Texture::Texture(DeviceAPI api) :
         p_height {0}
 {}
 
-Texture::~Texture()
-{}
+Texture::~Texture() = default;
 
 std::string Texture::filename() const
 {

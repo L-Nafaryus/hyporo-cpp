@@ -18,7 +18,7 @@ public:
 
     Texture();
 
-    ~Texture();
+    ~Texture() override;
 
 };
 

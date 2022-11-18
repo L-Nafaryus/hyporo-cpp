@@ -24,9 +24,10 @@ public:
 
     ShaderProgram();
 
+    explicit
     ShaderProgram(DeviceAPI api);
 
-    virtual ~ShaderProgram();
+    ~ShaderProgram() override;
 
     // Member functions
 

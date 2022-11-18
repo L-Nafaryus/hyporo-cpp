@@ -36,5 +36,6 @@ add_library(hyporo-gpu STATIC
 
 target_link_libraries(hyporo-gpu
     glad
+    stb
     hyporo-hyplib
 )

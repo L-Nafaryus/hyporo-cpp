@@ -124,7 +124,7 @@ public:
     }
 
     inline
-    StaticArray& operator=(const StaticArray& vs) noexcept
+    StaticArray& operator=(const StaticArray& vs)
     {
         std::copy(vs.begin(), vs.end(), begin());
         return *this;
@@ -185,12 +185,16 @@ public:
     virtual
     reference operator[](size_type n)
     {
+        if (n >= size())
+            throw std::out_of_range("Index out of bounds");
         return *(p_start + n);
     }
 
     virtual
     const_reference operator[](size_type n) const
     {
+        if (n >= size())
+            throw std::out_of_range("Index out of bounds");
         return *(p_start + n);
     }
 
@@ -222,6 +226,13 @@ public:
 
     friend
     void swap(StaticArray& lhs, StaticArray& rhs)
+    {
+        std::swap(lhs.p_start, rhs.p_start);
+        std::swap(lhs.p_end, rhs.p_end);
+    }
+
+    friend
+    void swap(StaticArray&& lhs, StaticArray&& rhs)
     {
         std::swap(lhs.p_start, rhs.p_start);
         std::swap(lhs.p_end, rhs.p_end);

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "scalar.hpp"
+#include "../scalar/scalar.hpp"
 #include "vector_space.hpp"
 
 

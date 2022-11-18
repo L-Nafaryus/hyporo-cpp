@@ -1,9 +1,9 @@
 
 include_directories(
-    ../hyporo/hyplib/vector
-    ../hyporo/hyplib/scalar
-    ../hyporo/hyplib/integer
-    ../hyporo/hyplib/matrix
+    ../hyporo/hyplib
+    ../hyporo/window_system
+    ../hyporo/gpu
+    ../hyporo/hmesh
 )
 
 add_executable(hyporo
@@ -14,5 +14,9 @@ add_executable(hyporo
 
 target_link_libraries(hyporo
     PUBLIC
+    hyporo-hyplib
+    hyporo-window-system
     hyporo-gpu
-        imgui)
+    hyporo-mesh
+    imgui
+)

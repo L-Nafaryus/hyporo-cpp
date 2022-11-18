@@ -2,6 +2,8 @@
 #include "window.hpp"
 #include "window_system.hpp"
 
+#include <GLFW/glfw3.h>
+
 
 namespace hpr::gpu::glfw
 {
@@ -28,11 +30,6 @@ gpu::Window* WindowSystem::newWindow()
     p_windows.push(new glfw::Window);
 
     return static_cast<gpu::Window*>(p_windows.back());
-}
-
-std::function<GLFWglproc(const char*)> WindowSystem::deviceProcAddress() const
-{
-    return std::function<GLFWglproc(const char*)>(glfwGetProcAddress);
 }
 
 }

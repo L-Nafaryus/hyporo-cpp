@@ -13,8 +13,7 @@ Buffer::Buffer() :
     p_vertexArrayIndex {0}
 {}
 
-Buffer::~Buffer()
-{}
+Buffer::~Buffer() = default;
 
 int Buffer::target() const
 {

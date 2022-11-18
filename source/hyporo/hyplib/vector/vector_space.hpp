@@ -1,6 +1,8 @@
 #pragma once
 
+#include "../scalar/scalar.hpp"
 #include "../array/array.hpp"
+
 
 namespace hpr
 {
@@ -40,12 +42,17 @@ public:
     {}
 
     inline
-    VectorSpace& operator=(const VectorSpace& vs) noexcept = default;
+    VectorSpace& operator=(const VectorSpace& vs)
+    {
+        base::operator=(vs);
+        return *this;
+    }
 
     inline
     VectorSpace& operator=(VectorSpace&& vs) noexcept
     {
-        std::swap(*this, vs);
+        swap(*this, vs);//std::forward<base>(static_cast<base>(*this)), std::forward<base>(static_cast<base>(vs)));
+        //std::swap(*this, vs);
         return *this;
     }
 
@@ -66,6 +73,14 @@ public:
     VectorSpace(std::initializer_list<value_type> list) :
         base {list}
     {}
+
+    template <std::convertible_to<value_type>... Args>
+    inline
+    VectorSpace(const value_type& v, const Args& ...args) :
+        base {v, static_cast<value_type>(args)...}
+    {
+        static_assert(1 + sizeof...(args) == Size, "Number of arguments must be equal to size of vector");
+    }
 
     template <std::convertible_to<value_type>... Args>
     inline
@@ -263,9 +278,19 @@ public:
 
 template <typename Type, size_t Size>
 inline
+VectorSpace<bool, Size> equal(const VectorSpace<Type, Size>& lhs, const VectorSpace<Type, Size>& rhs, scalar precision = 1e-5)
+{
+    VectorSpace<bool, Size> res;
+    for (auto n = 0; n < Size; ++n)
+        res[n] = equal(lhs[n], rhs[n], precision);
+    return res;
+}
+
+template <typename Type, size_t Size>
+inline
 Type sum(const VectorSpace<Type, Size>& vs)
 {
-    Type sum {0};
+    Type sum {};
     for (const Type& v : vs)
         sum += v;
     return sum;
@@ -297,10 +322,45 @@ constexpr
 VectorSpace<Type, 3> cross(const VectorSpace<Type, 3>& lhs, const VectorSpace<Type, 3>& rhs)
 {
     return VectorSpace<Type, 3>(
-        lhs[2] * rhs[3] - lhs[3] * rhs[2],
-        lhs[3] * rhs[1] - lhs[1] * rhs[3],
-        lhs[1] * rhs[2] - lhs[2] * rhs[1]
+        lhs[1] * rhs[2] - lhs[2] * rhs[1],
+        lhs[2] * rhs[0] - lhs[0] * rhs[2],
+        lhs[0] * rhs[1] - lhs[1] * rhs[0]
     );
+}
+
+template <typename Type, size_t Size>
+constexpr
+VectorSpace<Type, Size> pow(const VectorSpace<Type, Size>& vs, scalar degree)
+{
+    VectorSpace<Type, Size> res;
+    for (auto n = 0; n < Size; ++n)
+        res[n] = std::pow(vs[n], degree);
+    return res;
+}
+
+template <typename Type, size_t Size>
+constexpr
+VectorSpace<Type, Size> abs(const VectorSpace<Type, Size>& vs)
+{
+    VectorSpace<Type, Size> res;
+    for (auto n = 0; n < Size; ++n)
+        res[n] = std::abs(vs[n]);
+    return res;
+}
+
+template <typename Type, size_t Size>
+constexpr
+Type norm(const VectorSpace<Type, Size>& vs)
+{
+    return sqrt(sum(pow(abs(vs), 2)));
+}
+
+template <typename Type>
+constexpr
+Type angle(const VectorSpace<Type, 3>& lhs, const VectorSpace<Type, 3>& rhs)
+{
+    scalar cos = dot(lhs, rhs) / (norm(lhs) * norm(rhs));
+    return acos(cos); //clip(cos, -1., 1.));
 }
 
 template <typename Type, size_t Size>
@@ -308,16 +368,6 @@ inline
 VectorSpace<Type, Size> normalize(const VectorSpace<Type, Size>& vs)
 {
     return vs * inversesqrt(dot(vs, vs));
-}
-
-template <typename Type, size_t Size>
-constexpr
-VectorSpace<bool, Size> equal(const VectorSpace<Type, Size>& lhs, const VectorSpace<Type, Size>& rhs)
-{
-    VectorSpace<bool, Size> vs;
-    for (auto n = 0; n < Size; ++n)
-        vs[n] = lhs[n] == rhs[n];
-    return vs;
 }
 
 template <size_t Size>

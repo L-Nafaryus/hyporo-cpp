@@ -34,17 +34,21 @@ public:
 
     Shader();
 
+    explicit
     Shader(DeviceAPI api);
 
-    virtual ~Shader();
+    ~Shader() override;
 
     // Member functions
 
-    const std::string filename() const;
+    [[nodiscard]]
+    std::string filename() const;
 
-    const std::string label() const;
+    [[nodiscard]]
+    std::string label() const;
 
-    const ShaderType type() const;
+    [[nodiscard]]
+    ShaderType type() const;
 };
 
 } // end namespace hpr::gpu

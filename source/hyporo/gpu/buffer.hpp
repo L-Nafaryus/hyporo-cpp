@@ -19,6 +19,7 @@ public:
         Undefined,
         Vertex,
         Index,
+        Uniform,
         BufferTypeCount
     };
 
@@ -34,14 +35,17 @@ public:
 
     Buffer();
 
+    explicit
     Buffer(DeviceAPI api);
 
-    virtual ~Buffer();
+    ~Buffer() override;
 
     // Member functions
 
+    [[nodiscard]]
     int size() const;
 
+    [[nodiscard]]
     BufferType type() const;
 };
 

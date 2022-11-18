@@ -26,6 +26,7 @@ public:
 
     Context();
 
+    explicit
     Context(DeviceAPI api);
 
     virtual

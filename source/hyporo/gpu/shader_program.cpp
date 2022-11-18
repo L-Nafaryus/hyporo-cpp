@@ -15,7 +15,6 @@ ShaderProgram::ShaderProgram(DeviceAPI api) :
     p_isLinked {false}
 {}
 
-ShaderProgram::~ShaderProgram()
-{}
+ShaderProgram::~ShaderProgram() = default;
 
 }

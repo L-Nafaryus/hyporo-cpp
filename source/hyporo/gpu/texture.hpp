@@ -22,16 +22,20 @@ public:
 
     Texture();
 
+    explicit
     Texture(DeviceAPI api);
 
-    virtual ~Texture();
+    ~Texture() override;
 
     // Member functions
 
+    [[nodiscard]]
     std::string filename() const;
 
+    [[nodiscard]]
     int width() const;
 
+    [[nodiscard]]
     int height() const;
 };
 

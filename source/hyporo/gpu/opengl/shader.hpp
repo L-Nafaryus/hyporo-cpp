@@ -19,7 +19,7 @@ public:
 
     Shader();
 
-    virtual ~Shader();
+    ~Shader() override;
 
 };
 

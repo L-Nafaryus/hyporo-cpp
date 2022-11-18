@@ -44,7 +44,9 @@ void WindowSystem::closeWindow(Window* window)
 
 void WindowSystem::destroyWindow(Window* window)
 {
-    p_windows.remove(window);
+    for (auto n = 0; n < p_windows.size(); ++n)
+        if (p_windows[n] == window)
+            p_windows.remove(n);
     window->close();
     window = nullptr;
 }
@@ -56,6 +58,8 @@ Monitor* WindowSystem::monitor(int index)
 
 void WindowSystem::destroyMonitor(Monitor* monitor)
 {
-    p_monitors.remove(monitor);
+    for (auto n = 0; n < p_monitors.size(); ++n)
+        if (p_monitors[n] == monitor)
+            p_monitors.remove(n);
 }
 }

@@ -10,7 +10,6 @@ Texture::Texture() :
     p_textureIndex {0}
 {}
 
-Texture::~Texture()
-{}
+Texture::~Texture() = default;
 
 }

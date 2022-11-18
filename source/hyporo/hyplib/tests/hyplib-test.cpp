@@ -5,7 +5,7 @@
 #include "matrix.hpp"
 
 
-TEST(hyplib, Array)
+TEST(hyplib, StaticArray)
 {
     hpr::StaticArray<float, 3> arr {1, 3, 2};
     hpr::StaticArray<float, 4> sarr {arr, 5};
@@ -29,6 +29,13 @@ TEST(hyplib, DynamicArray)
     arr3.remove([](float num) { return num == 0; });
     EXPECT_EQ(arr3, hpr::darray<float>({1, 3, 2, 9, 5}));
     EXPECT_EQ(arr3.size(), 5);
+
+    hpr::DynamicArray<float*> arr4;
+    arr4.push(new float(5));
+    arr4.push(new float(7));
+    arr4.push(new float(9));
+    EXPECT_EQ(*arr4[0], 5.f);
+    EXPECT_EQ(*arr4[2], 9.f);
 }
 
 TEST(hyplib, Vector)
@@ -43,6 +50,9 @@ TEST(hyplib, Vector)
     EXPECT_EQ(v1 + v2, hpr::vec3(6, 10, 1));
     EXPECT_EQ(v1 - v2, hpr::vec3(-4, -4, 3));
     EXPECT_EQ((hpr::dot(v1, v2) ), 24);
+    EXPECT_EQ((hpr::cross(hpr::vec3(1, 0, 0), hpr::vec3(0, 1, 0))), hpr::vec3(0, 0, 1));
+    EXPECT_EQ((hpr::angle(hpr::vec3(1, 0, 0), hpr::vec3(0, 0, 1))), hpr::PI * 0.5);
+    EXPECT_EQ((hpr::normalize(hpr::vec3(1, 1, 1))), hpr::vec3(0.5773502691896258, 0.5773502691896258, 0.5773502691896258));
 }
 
 TEST(hyplib, Matrix)

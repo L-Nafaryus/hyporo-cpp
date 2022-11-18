@@ -19,8 +19,7 @@ Buffer::Buffer(DeviceAPI api) :
     p_stride {0}
 {}
 
-Buffer::~Buffer()
-{}
+Buffer::~Buffer() = default;
 
 // Member functions
 

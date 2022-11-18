@@ -23,7 +23,7 @@ public:
     using iterator = Iterator<Type>;
     using const_pointer = Type const*;
     using const_reference = Type const&;
-    using const_iterator = Iterator<Type> const;
+    using const_iterator = Iterator<const Type>;
 
 protected:
 
@@ -64,6 +64,28 @@ public:
     }
 
     inline
+    DynamicArray(const_iterator start, const_iterator end) :
+        p_size {size_type(end.operator->() - start.operator->())},
+        p_capacity {p_size},
+        p_start {new value_type[p_size]},
+        p_end {p_start + p_size},
+        p_storage_end {p_start + p_capacity}
+    {
+        std::copy(start, end, p_start);
+    }
+
+    inline
+    DynamicArray(iterator start, iterator end) :
+        p_size {size_type(end.operator->() - start.operator->())},
+        p_capacity {p_size},
+        p_start {new value_type[p_size]},
+        p_end {p_start + p_size},
+        p_storage_end {p_start + p_capacity}
+    {
+        std::copy(start, end, p_start);
+    }
+
+    inline
     DynamicArray(std::initializer_list<value_type> list) :
         p_size {list.size()},
         p_capacity {list.size()},
@@ -76,14 +98,14 @@ public:
 
     inline
     DynamicArray(size_type size, value_type value) :
-        p_size {size},
+        p_size {0},
         p_capacity {size},
         p_start {new value_type[p_capacity]},
         p_end {p_start + p_size},
         p_storage_end {p_start + p_capacity}
     {
-        for (auto n = 0; n < p_size; ++n)
-            *(p_start + n) = value;
+        for (auto n = 0; n < size; ++n)
+            push(value);
     }
 
     inline
@@ -161,12 +183,16 @@ public:
     virtual
     reference operator[](size_type n)
     {
+        if (n >= size())
+            throw std::out_of_range("Index out of bounds");
         return *(p_start + n);
     }
 
     virtual
     const_reference operator[](size_type n) const
     {
+        if (n >= size())
+            throw std::out_of_range("Index out of bounds");
         return *(p_start + n);
     }
 
@@ -353,6 +379,11 @@ public:
         p_storage_end = p_end + p_capacity;
     }
 
+    DynamicArray slice(iterator start, iterator end)
+    {
+        return DynamicArray {start, end};
+    }
+
     // Friend functions
 
     friend
@@ -372,6 +403,18 @@ public:
             if (lhs[n] != rhs[n])
                 return false;
         return true;
+    }
+
+    friend
+    DynamicArray operator+(const DynamicArray& lhs, const DynamicArray& rhs)
+    {
+        DynamicArray arr {rhs.size() + lhs.size(), {}};
+        for (auto n = 0; n < rhs.size(); ++n)
+        {
+            arr[n] = rhs[n];
+            arr[n + rhs.size()] = lhs[n];
+        }
+        return arr;
     }
 };
 
