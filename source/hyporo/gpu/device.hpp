@@ -9,6 +9,8 @@
 
 #include "../hyplib/array/array.hpp"
 
+#include "../window_system/window_system.hpp"
+
 
 namespace hpr::gpu
 {
@@ -38,6 +40,7 @@ protected:
     Buffer* p_currentUniformBuffer;
     ShaderProgram* p_currentShaderProgram;
 
+    darray<RenderTarget*> p_renderTargets;
 protected:
 
     // Constructors
@@ -69,6 +72,21 @@ public:
 
     virtual
     void faceCulling(bool enableFaceCulling, CullMode faceCullingMode) = 0;
+
+    // Render targets
+
+    virtual
+    void createScreenRenderTarget(RenderTarget** target, Window* window) = 0;
+    virtual
+    void createFramebufferRenderTarget(RenderTarget** target, int width, int height) = 0;
+    virtual
+    void createSubRenderTarget(RenderTarget** target, RenderTarget* parent, int x, int y, int width, int height) = 0;
+    virtual
+    void moveRenderTarget(RenderTarget* target, int x, int y);
+    virtual
+    void scaleRenderTarget(RenderTarget* target, int width, int height);
+    virtual
+    void destroyRenderTarget(RenderTarget*& target);
 
     // Buffers
 

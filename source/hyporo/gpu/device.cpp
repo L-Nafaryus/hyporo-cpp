@@ -51,6 +51,39 @@ void Device::create(Device** device, DeviceAPI api)
         throw std::invalid_argument("Unsupported device");
 }
 
+// Render targets
+
+void Device::moveRenderTarget(RenderTarget* target, int x, int y)
+{
+    if (target == nullptr)
+        throw std::invalid_argument("Invalid parameter");
+    target->p_posX = x;
+    target->p_posY = y;
+}
+
+void Device::scaleRenderTarget(RenderTarget* target, int width, int height)
+{
+    if (target == nullptr)
+        throw std::invalid_argument("Invalid parameter");
+    target->p_width = width;
+    target->p_height = height;
+}
+
+void Device::destroyRenderTarget(RenderTarget*& target)
+{
+    if (!target)
+        throw std::runtime_error("Invalid parameter");
+
+    for (auto iter = p_renderTargets.begin(); iter != p_renderTargets.end(); ++iter)
+        if (*iter == target)
+        {
+            delete target;
+            target = nullptr;
+            p_renderTargets.remove(iter);
+            break;
+        }
+}
+
 // Buffers
 
 void Device::useVertexBuffer(Buffer* buffer, int stride, int offset)

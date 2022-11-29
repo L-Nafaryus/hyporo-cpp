@@ -71,6 +71,76 @@ void Device::faceCulling(bool enableFaceCulling, CullMode faceCullingMode)
 
 // Render targets
 
+void Device::createScreenRenderTarget(gpu::RenderTarget** target, Window* window)
+{
+    if (target == nullptr)
+        throw std::invalid_argument("Invalid parameter");
+    *target = nullptr;
+    p_renderTargets.push(new opengl::RenderTarget());
+    auto* newTarget = dynamic_cast<opengl::RenderTarget*>(p_renderTargets.back());
+
+    newTarget->p_type = RenderTarget::Type::Screen;
+    newTarget->p_posX = 0;
+    newTarget->p_posY = 0;
+    newTarget->p_width = window->width();
+    newTarget->p_height = window->height();
+
+    *target = newTarget;
+}
+
+void Device::createFramebufferRenderTarget(gpu::RenderTarget** target, int width, int height)
+{
+    if (target == nullptr)
+        throw std::invalid_argument("Invalid parameter");
+    unsigned int texture;
+    glGenTextures(GL_TEXTURE_2D, &texture);
+    glBindTexture(GL_TEXTURE_2D, texture);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+
+    unsigned int framebuffer;
+    glGenFramebuffers(1, &framebuffer);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, framebuffer);
+
+    p_renderTargets.push(new opengl::RenderTarget());
+    auto* newTarget = dynamic_cast<opengl::RenderTarget*>(p_renderTargets.back());
+
+    newTarget->p_type = RenderTarget::Type::Framebuffer;
+    newTarget->p_posX = 0;
+    newTarget->p_posY = 0;
+    newTarget->p_width = width;
+    newTarget->p_height = height;
+    newTarget->p_frameBufferIndex = framebuffer;
+    newTarget->p_textureIndex = texture;
+
+    *target = newTarget;
+}
+
+void Device::createSubRenderTarget(gpu::RenderTarget** target, RenderTarget* parent, int x, int y, int width, int height)
+{
+
+}
+
+void Device::moveRenderTarget(gpu::RenderTarget* target, int x, int y)
+{
+
+}
+
+void Device::scaleRenderTarget(gpu::RenderTarget* target, int width, int height)
+{
+
+}
+
+void Device::destroyRenderTarget(gpu::RenderTarget*& target)
+{
+
+}
+
 // Buffers
 
 

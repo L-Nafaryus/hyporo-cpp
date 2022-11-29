@@ -82,7 +82,31 @@ public:
     void size(int width, int height);
 
     virtual
+    int width() const
+    {
+        return p_width;
+    }
+
+    virtual
+    int height() const
+    {
+        return p_height;
+    }
+
+    virtual
     void position(int x, int y);
+
+    virtual
+    int posX() const
+    {
+        return p_posX;
+    }
+
+    virtual
+    int posY() const
+    {
+        return p_posY;
+    }
 
     virtual
     void title(const std::string& title);

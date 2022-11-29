@@ -34,3 +34,4 @@ add_definitions(-DPRECISION_DOUBLE)
 
 add_subdirectory(source)
 
+add_subdirectory(docs)

@@ -40,8 +40,12 @@ public:
 
     // Render targets
 
-    virtual
-    void createScreenRenderTarget(RenderTarget** target);
+    void createScreenRenderTarget(RenderTarget** target, Window* window) override;
+    void createFramebufferRenderTarget(RenderTarget** target, int width, int height) override;
+    void createSubRenderTarget(RenderTarget** target, RenderTarget* parent, int x, int y, int width, int height) override;
+    void moveRenderTarget(RenderTarget* target, int x, int y) override;
+    void scaleRenderTarget(RenderTarget* target, int width, int height) override;
+    void destroyRenderTarget(RenderTarget*& target) override;
 
     // Buffers
 
