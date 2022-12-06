@@ -1,10 +1,10 @@
-#include "../window_system/window_system.hpp"
-#include "../window_system/glfw/window.hpp"
-#include "../gpu/device.hpp"
-#include "../gpu/opengl/device.hpp"
-#include "../hmesh/mesh.hpp"
-#include "../hyplib/matrix/matrix.hpp"
-#include "../hyplib/vector/vector.hpp"
+#include "hpr/window_system/window_system.hpp"
+#include "hpr/window_system/glfw/window_system.hpp"
+#include "hpr/window_system/glfw/window.hpp"
+#include "hpr/gpu.hpp"
+#include "hpr/math.hpp"
+#include "hpr/mesh.hpp"
+
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>

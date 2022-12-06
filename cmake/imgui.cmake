@@ -9,7 +9,7 @@ CPMAddPackage(
 )
 
 if(imgui_external_ADDED)
-    project(imgui)
+    set(EXTERNAL_PROJECT_NAME imgui)
 
     set(CMAKE_CXX_STANDARD 17)
 
@@ -18,7 +18,7 @@ if(imgui_external_ADDED)
     find_package(OpenGL REQUIRED)
     pkg_search_module(GLFW REQUIRED glfw3)
 
-    add_library(${PROJECT_NAME} STATIC
+    add_library(${EXTERNAL_PROJECT_NAME} STATIC
             ${imgui_external_SOURCE_DIR}/imgui.cpp
             ${imgui_external_SOURCE_DIR}/imgui_demo.cpp
             ${imgui_external_SOURCE_DIR}/imgui_draw.cpp
@@ -31,11 +31,11 @@ if(imgui_external_ADDED)
             ${imgui_external_SOURCE_DIR}/misc/freetype/imgui_freetype.cpp
             ${imgui_external_SOURCE_DIR}/misc/cpp/imgui_stdlib.cpp
             )
-    add_library(imgui::imgui ALIAS ${PROJECT_NAME})
+    add_library(imgui::imgui ALIAS ${EXTERNAL_PROJECT_NAME})
 
     add_compile_definitions(IMGUI_IMPL_OPENGL_LOADER_GLAD)
 
-    target_include_directories(${PROJECT_NAME}
+    target_include_directories(${EXTERNAL_PROJECT_NAME}
             PUBLIC
             $<BUILD_INTERFACE:${imgui_external_SOURCE_DIR}>
             $<BUILD_INTERFACE:${imgui_external_SOURCE_DIR}/backends>
@@ -46,14 +46,14 @@ if(imgui_external_ADDED)
             ${GLFW_INCLUDE_DIRS}
             )
 
-    target_link_libraries(${PROJECT_NAME}
+    target_link_libraries(${EXTERNAL_PROJECT_NAME}
             PUBLIC
             Freetype::Freetype
             glfw
             OpenGL::GL
             )
 
-    set_target_properties(${PROJECT_NAME}
+    set_target_properties(${EXTERNAL_PROJECT_NAME}
             PROPERTIES
             POSITION_INDEPENDENT_CODE ON
             OUTPUT_NAME imgui
@@ -63,21 +63,21 @@ if(imgui_external_ADDED)
     include(GNUInstallDirs)
 
     install(
-            TARGETS ${PROJECT_NAME}
-            EXPORT ${PROJECT_NAME}Targets
-            DESTINATION ${CMAKE_INSTALL_LIBDIR}/${PROJECT_NAME}
+            TARGETS ${EXTERNAL_PROJECT_NAME}
+            EXPORT ${EXTERNAL_PROJECT_NAME}Targets
+            DESTINATION ${CMAKE_INSTALL_LIBDIR}/${EXTERNAL_PROJECT_NAME}
     )
 
     install(
-            EXPORT ${PROJECT_NAME}Targets
-            FILE ${PROJECT_NAME}Targets.cmake
-            NAMESPACE ${PROJECT_NAME}::
-            DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
+            EXPORT ${EXTERNAL_PROJECT_NAME}Targets
+            FILE ${EXTERNAL_PROJECT_NAME}Targets.cmake
+            NAMESPACE ${EXTERNAL_PROJECT_NAME}::
+            DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${EXTERNAL_PROJECT_NAME}
     )
 
     install(
             DIRECTORY ${imgui_external_SOURCE_DIR}
-            DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}
+            DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${EXTERNAL_PROJECT_NAME}
             COMPONENT devel
             FILES_MATCHING
             PATTERN "*.h"

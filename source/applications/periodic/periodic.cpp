@@ -144,6 +144,7 @@ public:
             lattice = lattice.scale({0, 0, 0}, 1e-2);
         }
 
+        std::cout << (int)lattice.type() << std::endl;
         return lattice;
     }
 
@@ -200,6 +201,7 @@ public:
                 face.label("periodic-up");
         }
 
+        std::cout << (int)cell.type() << std::endl;
         return cell;
     }
 
@@ -228,12 +230,17 @@ public:
 
 };
 
+#include "lattice.hpp"
 
 int main(int argc, char** argv)
 {
-    Simple simple {0.01, {1., 0., 0.}};
+    /*Simple simple {0.01, {1., 0., 0.}};
     simple.build();
 
-    //simple.dump("simpleTest.step", csg::Shape::Format::STEP);
+    std::cout << (int)simple.type() << std::endl;
+    std::cout << simple.volume() << std::endl;
+     */
+    csg::Lattice lattice {{2, 2, 2}, {90, 90, 90}, 1, csg::Lattice::Type::Primitive};
+    lattice.dump("latticeTest.step", csg::Shape::Format::STEP);
     return 0;
 }

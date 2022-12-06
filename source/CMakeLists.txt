@@ -1,3 +1,3 @@
-add_subdirectory(hyporo)
+add_subdirectory(hpr)
 add_subdirectory(creator)
-add_subdirectory(applications)
+#add_subdirectory(applications)
