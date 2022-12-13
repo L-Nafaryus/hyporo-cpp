@@ -3,10 +3,13 @@ if(USE_SYSTEM_OCCT)
     find_package(OpenCASCADE REQUIRED)
 
     if(OpenCASCADE_FOUND)
-        message(STATUS "Found OCCT")
+        message(STATUS "OCCT: Found")
+    else()
+        message(FATAL "OCCT: Not Found")
     endif()
+
 else()
-    include(${CMAKE_CURRENT_LIST_DIR}/CPM.cmake)
+    include(${CMAKE_SOURCE_DIR}/cmake/tools/CPM.cmake)
 
     CPMAddPackage(
             NAME occt
@@ -16,7 +19,7 @@ else()
     )
 
     if(occt_ADDED)
-        # Freaks are using CMAKE_SOURCE_DIR and CMAKE_BINARY_DIR for the project root, fix it
+        # They are using CMAKE_SOURCE_DIR and CMAKE_BINARY_DIR for the project root, fix it
         file(READ ${occt_SOURCE_DIR}/CMakeLists.txt filedata_)
         string(FIND "${filedata_}" "CMAKE_SOURCE_DIR" need_patch)
 
@@ -38,7 +41,7 @@ else()
         endforeach()
 
         project(OCCT)
-        # should be better way to pass build directory
+        # find better way to pass build directory
         set(_OCCT_BINARY_DIR ${occt_BINARY_DIR})
         set(INSTALL_DIR ${occt_BINARY_DIR} CACHE BOOL "" FORCE)
 

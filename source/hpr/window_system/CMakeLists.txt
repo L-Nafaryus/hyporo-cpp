@@ -1,35 +1,68 @@
+cmake_minimum_required(VERSION 3.16)
 
-set(COMPONENT_NAME window_system)
-
-add_component_library(${COMPONENT_NAME} OBJECT
-    window_system.cpp
-    monitor.cpp
-    window.cpp
-    glfw/window_system.cpp
-    glfw/monitor.cpp
-    glfw/window.cpp
+project(window-system
+    VERSION "${HPR_PROJECT_VERSION}"
+    LANGUAGES CXX
 )
 
-#target_sources(${COMPONENT_NAME} PUBLIC
+add_library(${PROJECT_NAME})
+add_library(${CMAKE_PROJECT_NAME}::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
+add_module(${PROJECT_NAME})
 
-#)
+file(GLOB ${CMAKE_PROJECT_NAME}_${PROJECT_NAME}_HEADERS
+    "../window_system.hpp" "*.hpp" "glfw/*.hpp"
+)
 
-target_link_libraries(${COMPONENT_NAME}
+foreach(_header_path ${${CMAKE_PROJECT_NAME}_${PROJECT_NAME}_HEADERS})
+    list(APPEND ${CMAKE_PROJECT_NAME}_${PROJECT_NAME}_HEADERS_INTERFACE "$<BUILD_INTERFACE:${_header_path}>")
+endforeach()
+
+file(GLOB ${CMAKE_PROJECT_NAME}_${PROJECT_NAME}_SOURCES
+    "*.cpp" "glfw/*.cpp"
+)
+
+target_sources(${PROJECT_NAME}
+    INTERFACE
+        ${${CMAKE_PROJECT_NAME}_${PROJECT_NAME}_HEADERS_INTERFACE}
+        $<INSTALL_INTERFACE:include/${CMAKE_PROJECT_NAME}/${PROJECT_NAME}>
+    PRIVATE
+        ${${CMAKE_PROJECT_NAME}_${PROJECT_NAME}_SOURCES}
+)
+
+target_link_libraries(${PROJECT_NAME}
     glfw
 )
 
-install_component_headers(${COMPONENT_NAME})
-install_component_source(${COMPONENT_NAME})
 
-if (0)
-    add_executable(${COMPONENT_NAME}-test
-        tests/${COMPONENT_NAME}-test.cpp
-    )
-
-    target_link_libraries(${COMPONENT_NAME}-test
-        ${PROJECT_NAME}::${COMPONENT_NAME}
-        GTest::gtest_main
-    )
-
-    gtest_add_tests(TARGET ${COMPONENT_NAME}-test)
-endif()
+install(
+        TARGETS ${PROJECT_NAME}
+        EXPORT ${PROJECT_NAME}Targets
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}/${PROJECT_NAME}
+        NAMELINK_SKIP
+        INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+)
+install(
+        EXPORT ${PROJECT_NAME}Targets
+        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${CMAKE_PROJECT_NAME}-${HPR_PROJECT_VERSION}
+        NAMESPACE ${CMAKE_PROJECT_NAME}::
+)
+install(
+        TARGETS ${PROJECT_NAME}
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}/${PROJECT_NAME}
+        NAMELINK_ONLY
+        INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+)
+install(
+        DIRECTORY ${PROJECT_SOURCE_DIR}
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${CMAKE_PROJECT_NAME}
+        COMPONENT devel
+        FILES_MATCHING
+        PATTERN "*.h"
+        PATTERN "*.hpp"
+        PATTERN "tests" EXCLUDE
+)
+install(
+        FILES ../${PROJECT_NAME}.hpp
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${CMAKE_PROJECT_NAME}
+        COMPONENT devel
+)

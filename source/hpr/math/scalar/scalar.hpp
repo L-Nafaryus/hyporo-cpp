@@ -6,6 +6,7 @@
 
 namespace hpr
 {
+#define PRECISION_DOUBLE
 
 #if defined(PRECISION_FLOAT)
 

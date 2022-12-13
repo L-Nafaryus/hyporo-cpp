@@ -7,7 +7,7 @@ project(
 
 # Compiler options
 set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
 
 # Project options
 include(GNUInstallDirs)
@@ -34,4 +34,19 @@ target_link_libraries(${PROJECT_NAME}
 target_include_directories(${PROJECT_NAME}
     PRIVATE
     ../
+)
+
+set(CMAKE_CXX_STANDARD 20)
+add_executable(testi
+    test.cpp
+)
+
+target_include_directories(testi
+    PRIVATE
+    ../
+)
+
+target_link_libraries(testi
+    hpr::hpr
+    imgui
 )

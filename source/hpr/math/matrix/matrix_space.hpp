@@ -253,9 +253,21 @@ public:
     }
 
     friend inline
-    VectorSpace<Type, Rows> operator*(const VectorSpace<Type, Rows>& vs, const MatrixSpace& ms)
+    VectorSpace<Type, Cols> operator*(const VectorSpace<Type, Cols>& vs, const MatrixSpace& ms)
     {
+        VectorSpace<Type, Cols> res;
+        for (auto n = 0; n < Cols; ++n)
+            res[0] = sum(ms.col(n) * vs);
+        return res;
+    }
 
+    friend inline
+    VectorSpace<Type, Rows> operator*(const MatrixSpace& ms, const VectorSpace<Type, Rows>& vs)
+    {
+        VectorSpace<Type, Rows> res;
+        for (auto n = 0; n < Rows; ++n)
+            res[0] = sum(ms.row(n) * vs);
+        return res;
     }
 
     MatrixSpace& fill(value_type value)

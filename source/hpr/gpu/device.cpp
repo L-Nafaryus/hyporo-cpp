@@ -65,6 +65,7 @@ void Device::scaleRenderTarget(RenderTarget* target, int width, int height)
 {
     if (target == nullptr)
         throw std::invalid_argument("Invalid parameter");
+
     target->p_width = width;
     target->p_height = height;
 }

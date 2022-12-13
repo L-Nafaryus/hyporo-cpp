@@ -1,39 +1,31 @@
 cmake_minimum_required(VERSION 3.16)
 
-project(mesh
-        VERSION "${HPR_PROJECT_VERSION}"
-        LANGUAGES CXX
-        )
+project(core
+    VERSION "${HPR_PROJECT_VERSION}"
+    LANGUAGES CXX
+)
 
-add_library(${PROJECT_NAME})
+add_library(${PROJECT_NAME} INTERFACE)
 add_library(${CMAKE_PROJECT_NAME}::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
 add_module(${PROJECT_NAME})
 
-file(GLOB ${CMAKE_PROJECT_NAME}_${PROJECT_NAME}_HEADERS
-        "../mesh.hpp" "*.hpp"
-        )
+file(GLOB ${CMAKE_PROJECT_NAME}_${PROJECT_NAME}_HEADERS "../core.hpp" "*.hpp")
 
 foreach(_header_path ${${CMAKE_PROJECT_NAME}_${PROJECT_NAME}_HEADERS})
     list(APPEND ${CMAKE_PROJECT_NAME}_${PROJECT_NAME}_HEADERS_INTERFACE "$<BUILD_INTERFACE:${_header_path}>")
 endforeach()
 
-file(GLOB ${CMAKE_PROJECT_NAME}_${PROJECT_NAME}_SOURCES
-        "*.cpp"
-        )
-
 target_sources(${PROJECT_NAME}
-        INTERFACE
+    INTERFACE
         ${${CMAKE_PROJECT_NAME}_${PROJECT_NAME}_HEADERS_INTERFACE}
         $<INSTALL_INTERFACE:include/${CMAKE_PROJECT_NAME}/${PROJECT_NAME}>
-        PRIVATE
-        ${${CMAKE_PROJECT_NAME}_${PROJECT_NAME}_SOURCES}
-        )
+)
 
 install(
         TARGETS ${PROJECT_NAME}
         EXPORT ${PROJECT_NAME}Targets
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}/${PROJECT_NAME}
-        NAMELINK_SKIP
+            NAMELINK_SKIP
         INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
 )
 install(
@@ -61,10 +53,3 @@ install(
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${CMAKE_PROJECT_NAME}
         COMPONENT devel
 )
-
-
-if(HPR_TEST)
-    add_subdirectory(tests)
-endif()
-
-

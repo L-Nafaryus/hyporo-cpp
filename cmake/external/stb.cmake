@@ -1,4 +1,4 @@
-include(${CMAKE_CURRENT_LIST_DIR}/CPM.cmake)
+include(${CMAKE_SOURCE_DIR}/cmake/tools/CPM.cmake)
 
 CPMAddPackage(
         NAME stb_external

@@ -1,10 +1,7 @@
 #pragma once
 
-#include "../../hyporo/hyplib/scalar/scalar.hpp"
-#include "../../hyporo/hyplib/vector/vector.hpp"
-#include "../../hyporo/hyplib/array/array.hpp"
-#include "../../hyporo/hyplib/matrix/matrix.hpp"
-#include "../../hyporo/csg/csg.hpp"
+#include "../../hpr/math.hpp"
+#include "../../hpr/csg.hpp"
 
 
 namespace hpr::csg
