@@ -164,3 +164,4 @@ message(STATUS ${summary})
 
 # Additional applications
 add_subdirectory(source/applications)
+add_subdirectory(source/creator)

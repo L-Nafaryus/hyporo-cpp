@@ -1,37 +1,26 @@
 cmake_minimum_required(VERSION 3.16)
 
-project(gpu
+project(geometry
     VERSION "${HPR_PROJECT_VERSION}"
     LANGUAGES CXX
 )
 
-add_library(${PROJECT_NAME})
+add_library(${PROJECT_NAME} INTERFACE)
 add_library(${CMAKE_PROJECT_NAME}::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
 add_module(${PROJECT_NAME})
 
 file(GLOB ${CMAKE_PROJECT_NAME}_${PROJECT_NAME}_HEADERS
-    "../gpu.hpp" "*.hpp"
+    "../geometry.hpp" "*.hpp"
 )
 
 foreach(_header_path ${${CMAKE_PROJECT_NAME}_${PROJECT_NAME}_HEADERS})
     list(APPEND ${CMAKE_PROJECT_NAME}_${PROJECT_NAME}_HEADERS_INTERFACE "$<BUILD_INTERFACE:${_header_path}>")
 endforeach()
 
-file(GLOB ${CMAKE_PROJECT_NAME}_${PROJECT_NAME}_SOURCES
-    "*.cpp"
-)
-
 target_sources(${PROJECT_NAME}
     INTERFACE
         ${${CMAKE_PROJECT_NAME}_${PROJECT_NAME}_HEADERS_INTERFACE}
         $<INSTALL_INTERFACE:include/${CMAKE_PROJECT_NAME}/${PROJECT_NAME}>
-    PRIVATE
-        ${${CMAKE_PROJECT_NAME}_${PROJECT_NAME}_SOURCES}
-)
-
-target_link_libraries(${PROJECT_NAME}
-    glad
-    stb
 )
 
 install(

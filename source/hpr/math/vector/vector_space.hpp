@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../integer.hpp"
 #include "../scalar.hpp"
 #include "../../containers/array/static_array.hpp"
 
@@ -7,18 +8,42 @@
 namespace hpr
 {
 
-template <typename Type, size_t Size>
-class VectorSpace : public StaticArray<Type, Size>
+// forward declarations
+
+template <IsReal T, Size S> requires (S >= 0)
+class Vector;
+
+template <IsReal T, Size S>
+using SubVector = typename std::conditional<S >= 2, Vector<T, S - 1>, Vector<T, 1>>::type;
+
+// type traits
+
+template <typename T>
+struct is_vector : public std::false_type {};
+
+template <typename T, Size S>
+struct is_vector<Vector<T, S>> : public std::true_type {};
+
+// concepts
+
+template <typename T>
+concept IsVector = is_vector<T>::value;
+
+}
+
+namespace hpr
 {
-    static_assert(std::is_arithmetic<Type>::value, "Type must be numeric");
 
-    using base = StaticArray<Type, Size>;
+template <IsReal Type, Size S> requires (S >= 0)
+class Vector : public StaticArray<Type, S>
+{
 
-    using SubVector = typename std::conditional<Size >= 2, VectorSpace<Type, Size - 1>, VectorSpace<Type, 1>>::type;
+    using base = StaticArray<Type, S>;
+
 public:
 
     using value_type = Type;
-    using size_type = size_t;
+    using size_type = Size;
     using pointer = Type*;
     using reference = Type&;
     using iterator = Iterator<Type>;
@@ -26,361 +51,156 @@ public:
 
 public:
 
-    inline
-    VectorSpace() :
+    //! null constructor
+    constexpr
+    Vector() :
         base {}
     {}
 
-    inline
-    VectorSpace(const VectorSpace& vs) :
+    //! copy constructor
+    constexpr
+    Vector(const Vector& vs) :
         base {static_cast<base>(vs)}
     {}
 
-    inline
-    VectorSpace(VectorSpace&& vs) noexcept :
+    //! move constructor
+    constexpr
+    Vector(Vector&& vs) noexcept :
         base {std::forward<base>(static_cast<base>(vs))}
     {}
 
-    inline
-    VectorSpace& operator=(const VectorSpace& vs)
+    //! copy assignment operator
+    constexpr
+    Vector& operator=(const Vector& vs)
     {
         base::operator=(vs);
         return *this;
     }
 
-    inline
-    VectorSpace& operator=(VectorSpace&& vs) noexcept
+    //! move assignment operator
+    constexpr
+    Vector& operator=(Vector&& vs) noexcept
     {
-        swap(*this, vs);//std::forward<base>(static_cast<base>(*this)), std::forward<base>(static_cast<base>(vs)));
-        //std::swap(*this, vs);
+        swap(*this, vs);
         return *this;
     }
 
+    //! destructor
     virtual
-    ~VectorSpace() = default;
+    ~Vector() = default;
 
-    inline
-    VectorSpace(typename base::iterator start, typename base::iterator end) :
+    //! copy constructor from base
+    constexpr
+    Vector(const base& arr) :
+        base {arr}
+    {}
+
+    //! move constructor from base
+    constexpr
+    Vector(base&& arr) :
+        base {std::forward<base>(arr)}
+    {}
+
+    //! construct from iterators
+    constexpr
+    Vector(typename base::iterator start, typename base::iterator end) :
         base {start, end}
     {}
 
-    inline
-    VectorSpace(typename base::const_iterator start, typename base::const_iterator end) :
+    //! construct from constant iterators
+    constexpr
+    Vector(typename base::const_iterator start, typename base::const_iterator end) :
         base {start, end}
     {}
 
-    inline
-    VectorSpace(std::initializer_list<value_type> list) :
+    //! construct from initializer list
+    constexpr
+    Vector(std::initializer_list<value_type> list) :
         base {list}
     {}
 
-    template <std::convertible_to<value_type>... Args>
-    inline
-    VectorSpace(const value_type& v, const Args& ...args) :
+    //! copy constructor with variadic args
+    template <IsReal... Args>
+    constexpr
+    Vector(const value_type& v, const Args& ...args) requires (S == 1 + sizeof...(args)):
         base {v, static_cast<value_type>(args)...}
-    {
-        static_assert(1 + sizeof...(args) == Size, "Number of arguments must be equal to size of vector");
-    }
+    {}
 
-    template <std::convertible_to<value_type>... Args>
-    inline
-    VectorSpace(value_type&& v, Args&& ...args) :
+    //! move constructor with variadic args
+    template <IsReal... Args>
+    constexpr
+    Vector(value_type&& v, Args&& ...args) requires (S == 1 + sizeof...(args)):
         base {v, static_cast<value_type>(std::forward<Args>(args))...}
-    {
-        static_assert(1 + sizeof...(args) == Size, "Number of arguments must be equal to size of vector");
-    }
+    {}
 
-    /*template <size_type SubSize, std::convertible_to<value_type>... Args>
-    inline
-    VectorSpace(const VectorSpace<value_type, SubSize>& subvec, const value_type& v, const Args& ...args) :
-        base {static_cast<StaticArray<value_type, SubSize>>(subvec), v,
-              static_cast<value_type>(std::forward<Args>(args))...}
-    {}*/
-
-    inline
-    VectorSpace(const SubVector& subvs, const value_type& v) :
+    //! copy constructor with sub vector and value
+    constexpr
+    Vector(const SubVector<Type, S>& svs, const value_type& v) requires (S >= 1):
         base {}
     {
-        for (auto n = 0; n < subvs.size(); ++n)
-            (*this)[n] = subvs[n];
-        (*this)[subvs.size()] = v;
+        for (auto n = 0; n < svs.size(); ++n)
+            (*this)[n] = svs[n];
+        (*this)[svs.size()] = v;
     }
 
-    template <size_type BiggerSize>
-    inline
-    VectorSpace(const VectorSpace<Type, BiggerSize>& vs) :
-        base {vs.begin(), vs.begin() + Size}
-    {
-        static_assert(BiggerSize > Size, "Size should be bigger");
-    }
-
-    // Member functions
-
-    // vector versus scalar (per element operations)
-
-    friend inline
-    VectorSpace operator-(const VectorSpace& rhs)
-    {
-        VectorSpace vs {rhs};
-        for (value_type& v : vs)
-            v = -v;
-        return vs;
-    }
-
-    inline
-    void operator*=(const value_type& val)
-    {
-        //for (value_type& v : *this)
-        //    v *= val;
-        for (auto n = 0; n < Size; ++n)
-            (*this)[n] *= val;
-    }
-
-    inline
-    void operator+=(const value_type& val)
-    {
-        for (auto n = 0; n < Size; ++n)
-            (*this)[n] += val;
-    }
-
-    inline
-    void operator-=(const value_type& val)
-    {
-        //for (value_type& v : *this)
-        //    v -= val;
-        for (auto n = 0; n < Size; ++n)
-            (*this)[n] -= val;
-    }
-
-    inline
-    void operator/=(const value_type& val)
-    {
-        for (value_type& v : *this)
-            v /= val;
-    }
-
-    friend inline
-    VectorSpace operator+(const VectorSpace& lhs, const value_type& rhs)
-    {
-        VectorSpace vs {lhs};
-        vs += rhs;
-        return vs;
-    }
-
-    friend inline
-    VectorSpace operator+(const value_type& lhs, const VectorSpace& rhs)
-    {
-        return operator+(rhs, lhs);
-    }
-
-    friend inline
-    VectorSpace operator*(const VectorSpace& lhs, const value_type& rhs)
-    {
-        VectorSpace vs {lhs};
-        vs *= rhs;
-        return vs;
-    }
-
-    friend inline
-    VectorSpace operator*(const value_type& lhs, const VectorSpace& rhs)
-    {
-        return operator*(rhs, lhs);
-    }
-
-    friend inline
-    VectorSpace operator/(const VectorSpace& lhs, const value_type& rhs)
-    {
-        VectorSpace vs {lhs};
-        vs /= rhs;
-        return vs;
-    }
-
-    friend inline
-    VectorSpace operator/(const value_type& lhs, const VectorSpace& rhs)
-    {
-        VectorSpace vs;
-        for (auto n = 0; n < vs.size(); ++n)
-            vs[n] = lhs / rhs[n];
-        return vs;
-    }
-
-    // vector versus vector (per element operations)
-
-    inline
-    void operator*=(const VectorSpace& vs)
-    {
-        for (auto n = 0; n < Size; ++n)
-            (*this)[n] *= vs[n];
-    }
-
-    inline
-    void operator+=(const VectorSpace& vs)
-    {
-        for (auto n = 0; n < Size; ++n)
-            (*this)[n] += vs[n];
-    }
-
-    inline
-    void operator-=(const VectorSpace& vs)
-    {
-        for (auto n = 0; n < Size; ++n)
-            (*this)[n] -= vs[n];
-    }
-
-    inline
-    void operator/=(const VectorSpace& vs)
-    {
-        for (auto n = 0; n < Size; ++n)
-            (*this)[n] /= vs[n];
-    }
-
-    friend inline
-    VectorSpace operator+(const VectorSpace& lhs, const VectorSpace& rhs)
-    {
-        VectorSpace vs {lhs};
-        vs += rhs;
-        return vs;
-    }
-
-    friend inline
-    VectorSpace operator-(const VectorSpace& lhs, const VectorSpace& rhs)
-    {
-        VectorSpace vs {lhs};
-        vs -= rhs;
-        return vs;
-    }
-
-    friend inline
-    VectorSpace operator*(const VectorSpace& lhs, const VectorSpace& rhs)
-    {
-        VectorSpace vs {lhs};
-        vs *= rhs;
-        return vs;
-    }
-
-    friend inline
-    VectorSpace operator/(const VectorSpace& lhs, const VectorSpace& rhs)
-    {
-        VectorSpace vs {lhs};
-        vs /= rhs;
-        return vs;
-    }
-
-    friend inline
-    bool operator==(const VectorSpace& lhs, const VectorSpace& rhs)
-    {
-        for (auto n = 0; n < Size; ++n)
-            if (lhs[n] != rhs[n])
-                return false;
-        return true;
-    }
-
-    friend inline
-    bool operator!=(const VectorSpace& lhs, const VectorSpace& rhs)
-    {
-        return !(lhs == rhs);
-    }
-
+    //! copy constructor from greater vector
+    template <Size GS> requires (GS > S)
+    constexpr explicit
+    Vector(const Vector<Type, GS>& vs) :
+        base {vs.begin(), vs.begin() + S}
+    {}
 
 };
 
-template <typename Type, size_t Size>
+// global operators
+
+template <IsReal T, Size S> inline Vector<T, S> operator+(const Vector<T, S>& lhs) { Vector<T, S> vs; for (Size n = 0; n < S; ++n) vs[n] = lhs[n]; return vs; }
+template <IsReal T, Size S> inline Vector<T, S> operator-(const Vector<T, S>& lhs) { Vector<T, S> vs; for (Size n = 0; n < S; ++n) vs[n] = -lhs[n]; return vs; }
+
+template <IsReal T, Size S> inline Vector<T, S>& operator+=(Vector<T, S>& lhs, const Vector<T, S>& rhs) { for (Size n = 0; n < S; ++n) lhs[n] += rhs[n]; return lhs; }
+template <IsReal T, Size S> inline Vector<T, S>& operator-=(Vector<T, S>& lhs, const Vector<T, S>& rhs) { for (Size n = 0; n < S; ++n) lhs[n] -= rhs[n]; return lhs; }
+template <IsReal T, Size S> inline Vector<T, S>& operator*=(Vector<T, S>& lhs, const Vector<T, S>& rhs) { for (Size n = 0; n < S; ++n) lhs[n] *= rhs[n]; return lhs; }
+template <IsReal T, Size S> inline Vector<T, S>& operator/=(Vector<T, S>& lhs, const Vector<T, S>& rhs) { for (Size n = 0; n < S; ++n) lhs[n] /= rhs[n]; return lhs; }
+
+template <IsReal T, Size S> inline Vector<T, S> operator+(const Vector<T, S>& lhs, const Vector<T, S>& rhs) { Vector<T, S> vs {lhs}; for (Size n = 0; n < S; ++n) vs[n] += rhs[n]; return vs; }
+template <IsReal T, Size S> inline Vector<T, S> operator-(const Vector<T, S>& lhs, const Vector<T, S>& rhs) { Vector<T, S> vs {lhs}; for (Size n = 0; n < S; ++n) vs[n] -= rhs[n]; return vs; }
+template <IsReal T, Size S> inline Vector<T, S> operator*(const Vector<T, S>& lhs, const Vector<T, S>& rhs) { Vector<T, S> vs {lhs}; for (Size n = 0; n < S; ++n) vs[n] *= rhs[n]; return vs; }
+template <IsReal T, Size S> inline Vector<T, S> operator/(const Vector<T, S>& lhs, const Vector<T, S>& rhs) { Vector<T, S> vs {lhs}; for (Size n = 0; n < S; ++n) vs[n] /= rhs[n]; return vs; }
+
+template <IsReal T, Size S> inline bool operator==(const Vector<T, S>& lhs, const Vector<T, S>& rhs) { for (Size n = 0; n < S; ++n) if (lhs[n] != rhs[n]) return false; return true; }
+template <IsReal T, Size S> inline bool operator!=(const Vector<T, S>& lhs, const Vector<T, S>& rhs) { for (Size n = 0; n < S; ++n) if (lhs[n] == rhs[n]) return false; return true; }
+
+
+template <IsReal T, Size S> inline Vector<T, S>& operator+=(Vector<T, S>& lhs, const T& rhs) { for (Size n = 0; n < S; ++n) lhs[n] += rhs; return lhs; }
+template <IsReal T, Size S> inline Vector<T, S>& operator-=(Vector<T, S>& lhs, const T& rhs) { for (Size n = 0; n < S; ++n) lhs[n] -= rhs; return lhs; }
+template <IsReal T, Size S> inline Vector<T, S>& operator*=(Vector<T, S>& lhs, const T& rhs) { for (Size n = 0; n < S; ++n) lhs[n] *= rhs; return lhs; }
+template <IsReal T, Size S> inline Vector<T, S>& operator/=(Vector<T, S>& lhs, const T& rhs) { for (Size n = 0; n < S; ++n) lhs[n] /= rhs; return lhs; }
+
+template <IsReal T, Size S> inline Vector<T, S> operator+(const Vector<T, S>& lhs, const T& rhs) { Vector<T, S> vs {lhs}; for (Size n = 0; n < S; ++n) vs[n] += rhs; return vs; }
+template <IsReal T, Size S> inline Vector<T, S> operator-(const Vector<T, S>& lhs, const T& rhs) { Vector<T, S> vs {lhs}; for (Size n = 0; n < S; ++n) vs[n] -= rhs; return vs; }
+template <IsReal T, Size S> inline Vector<T, S> operator*(const Vector<T, S>& lhs, const T& rhs) { Vector<T, S> vs {lhs}; for (Size n = 0; n < S; ++n) vs[n] *= rhs; return vs; }
+template <IsReal T, Size S> inline Vector<T, S> operator/(const Vector<T, S>& lhs, const T& rhs) { Vector<T, S> vs {lhs}; for (Size n = 0; n < S; ++n) vs[n] /= rhs; return vs; }
+
+template <IsReal T, Size S> inline Vector<T, S> operator+(const T& lhs, const Vector<T, S>& rhs) { Vector<T, S> vs {rhs}; for (Size n = 0; n < S; ++n) vs[n] += lhs; return vs; }
+template <IsReal T, Size S> inline Vector<T, S> operator-(const T& lhs, const Vector<T, S>& rhs) { Vector<T, S> vs {rhs}; for (Size n = 0; n < S; ++n) vs[n] -= lhs; return vs; }
+template <IsReal T, Size S> inline Vector<T, S> operator*(const T& lhs, const Vector<T, S>& rhs) { Vector<T, S> vs {rhs}; for (Size n = 0; n < S; ++n) vs[n] *= lhs; return vs; }
+template <IsReal T, Size S> inline Vector<T, S> operator/(const T& lhs, const Vector<T, S>& rhs) { Vector<T, S> vs {rhs}; for (Size n = 0; n < S; ++n) vs[n] /= lhs; return vs; }
+
+// boolean operations
+
+template <typename Type, Size S>
 inline
-VectorSpace<bool, Size> equal(const VectorSpace<Type, Size>& lhs, const VectorSpace<Type, Size>& rhs, scalar precision = 1e-5)
+Vector<bool, S> equal(const Vector<Type, S>& lhs, const Vector<Type, S>& rhs, const scalar& precision = scalar::precision())
 {
-    VectorSpace<bool, Size> res;
-    for (auto n = 0; n < Size; ++n)
-        res[n] = equal(lhs[n], rhs[n], precision);
-    return res;
+    Vector<bool, S> vs;
+    for (auto n = 0; n < S; ++n)
+        vs[n] = equal(lhs[n], rhs[n], precision);
+    return vs;
 }
 
-template <typename Type, size_t Size>
+template <Size S>
 inline
-Type sum(const VectorSpace<Type, Size>& vs)
-{
-    Type sum {};
-    for (const Type& v : vs)
-        sum += v;
-    return sum;
-}
-
-template <typename Type, size_t Size>
-constexpr
-Type dot(const VectorSpace<Type, Size>& lhs, const VectorSpace<Type, Size>& rhs)
-{
-    return sum(lhs * rhs);
-}
-
-template <typename Type, size_t Size>
-inline
-Type length(const VectorSpace<Type, Size>& vs)
-{
-    return sqrt(dot(vs, vs));
-}
-
-template <typename Type, size_t Size>
-inline
-Type distance(const VectorSpace<Type, Size>& point1, const VectorSpace<Type, Size>& point2)
-{
-    return length(point1 - point2);
-}
-
-template <typename Type>
-constexpr
-VectorSpace<Type, 3> cross(const VectorSpace<Type, 3>& lhs, const VectorSpace<Type, 3>& rhs)
-{
-    return VectorSpace<Type, 3>(
-        lhs[1] * rhs[2] - lhs[2] * rhs[1],
-        lhs[2] * rhs[0] - lhs[0] * rhs[2],
-        lhs[0] * rhs[1] - lhs[1] * rhs[0]
-    );
-}
-
-template <typename Type, size_t Size>
-constexpr
-VectorSpace<Type, Size> pow(const VectorSpace<Type, Size>& vs, scalar degree)
-{
-    VectorSpace<Type, Size> res;
-    for (auto n = 0; n < Size; ++n)
-        res[n] = std::pow(vs[n], degree);
-    return res;
-}
-
-template <typename Type, size_t Size>
-constexpr
-VectorSpace<Type, Size> abs(const VectorSpace<Type, Size>& vs)
-{
-    VectorSpace<Type, Size> res;
-    for (auto n = 0; n < Size; ++n)
-        res[n] = std::abs(vs[n]);
-    return res;
-}
-
-template <typename Type, size_t Size>
-constexpr
-Type norm(const VectorSpace<Type, Size>& vs)
-{
-    return sqrt(sum(pow(abs(vs), 2)));
-}
-
-template <typename Type>
-constexpr
-Type angle(const VectorSpace<Type, 3>& lhs, const VectorSpace<Type, 3>& rhs)
-{
-    scalar cos = dot(lhs, rhs) / (norm(lhs) * norm(rhs));
-    return acos(cos); //clip(cos, -1., 1.));
-}
-
-template <typename Type, size_t Size>
-inline
-VectorSpace<Type, Size> normalize(const VectorSpace<Type, Size>& vs)
-{
-    return vs * inversesqrt(dot(vs, vs));
-}
-
-template <size_t Size>
-constexpr
-bool any(const VectorSpace<bool, Size>& vs)
+bool any(const Vector<bool, S>& vs)
 {
     bool res = false;
     for (auto e : vs)
@@ -388,9 +208,9 @@ bool any(const VectorSpace<bool, Size>& vs)
     return res;
 }
 
-template <size_t Size>
-constexpr
-bool all(const VectorSpace<bool, Size>& vs)
+template <Size S>
+inline
+bool all(const Vector<bool, S>& vs)
 {
     bool res = true;
     for (auto e : vs)
@@ -398,13 +218,111 @@ bool all(const VectorSpace<bool, Size>& vs)
     return res;
 }
 
-// Aliases
+// per element operations
 
-template <typename Type, size_t Size>
-using vec = VectorSpace<Type, Size>;
+template <typename Type, Size S>
+inline
+Vector<Type, S> abs(const Vector<Type, S>& vs)
+{
+    Vector<Type, S> res;
+    for (auto n = 0; n < S; ++n)
+        res[n] = abs(vs[n]);
+    return res;
+}
 
-using vec2 = VectorSpace<scalar, 2>;
-using vec3 = VectorSpace<scalar, 3>;
-using vec4 = VectorSpace<scalar, 4>;
+template <typename Type, Size S>
+inline
+Type sum(const Vector<Type, S>& vs)
+{
+    Type sum {};
+    for (const Type& v : vs)
+        sum += v;
+    return sum;
+}
+
+template <typename Type, Size S>
+inline
+Vector<Type, S> pow(const Vector<Type, S>& vs, scalar degree)
+{
+    Vector<Type, S> res;
+    for (auto n = 0; n < S; ++n)
+        res[n] = pow(vs[n], degree);
+    return res;
+}
+
+// vector operations
+
+template <typename Type, Size S>
+inline
+Type norm(const Vector<Type, S>& vs)
+{
+    return sqrt(sum(pow(abs(vs), 2)));
+}
+
+template <typename Type, Size S>
+inline
+Type dot(const Vector<Type, S>& lhs, const Vector<Type, S>& rhs)
+{
+    return sum(lhs * rhs);
+}
+
+template <typename Type, Size S>
+inline
+Type length(const Vector<Type, S>& vs)
+{
+    return sqrt(dot(vs, vs));
+}
+
+template <typename Type, Size S>
+inline
+Type mag(const Vector<Type, S>& vs)
+{
+    return length(vs);
+}
+
+template <typename Type, Size S>
+inline
+Type distance(const Vector<Type, S>& vs1, const Vector<Type, S>& vs2)
+{
+    return length(vs1 - vs2);
+}
+
+template <typename Type, Size S>
+inline
+Vector<Type, S> normalize(const Vector<Type, S>& vs)
+{
+    return vs * isqrt(dot(vs, vs));
+}
+
+template <typename Type>
+inline
+Type angle(const Vector<Type, 3>& lhs, const Vector<Type, 3>& rhs)
+{
+    scalar cos = dot(lhs, rhs) / (norm(lhs) * norm(rhs));
+    return acos(cos); //clip(cos, -1., 1.));
+}
+
+// vector 3 operations
+
+template <typename Type>
+inline
+Vector<Type, 3> cross(const Vector<Type, 3>& lhs, const Vector<Type, 3>& rhs)
+{
+    return Vector<Type, 3>(
+        lhs[1] * rhs[2] - lhs[2] * rhs[1],
+        lhs[2] * rhs[0] - lhs[0] * rhs[2],
+        lhs[0] * rhs[1] - lhs[1] * rhs[0]
+    );
+}
+
+
+// aliases
+
+template <typename Type, Size S>
+using vec = Vector<Type, S>;
+
+using vec2 = Vector<scalar, 2>;
+using vec3 = Vector<scalar, 3>;
+using vec4 = Vector<scalar, 4>;
 
 }

@@ -1,6 +1,6 @@
 
 project(
-    hyporo
+    hyporo-creator
     VERSION 0.1.0
     LANGUAGES CXX
 )
@@ -13,40 +13,49 @@ set(CMAKE_CXX_STANDARD 20)
 include(GNUInstallDirs)
 
 
-add_executable(${PROJECT_NAME}
-    creator.cpp
+#add_executable(${PROJECT_NAME}
+#    creator.cpp
+#)
 
-        ../hpr/window_system/window_system.cpp
-        ../hpr/window_system/monitor.cpp
-        ../hpr/window_system/window.cpp
-        ../hpr/window_system/glfw/window_system.cpp
-        ../hpr/window_system/glfw/monitor.cpp
-        ../hpr/window_system/glfw/window.cpp
-)
+include(${CMAKE_SOURCE_DIR}/cmake/external/imgui.cmake)
+#message(STATUS "project name: ${PROJECT_NAME}")
+#target_link_libraries(${PROJECT_NAME}
+#    hpr::hpr
+#    imgui
+#)
 
-include(${CMAKE_SOURCE_DIR}/cmake/imgui.cmake)
-message(STATUS "project name: ${PROJECT_NAME}")
-target_link_libraries(${PROJECT_NAME}
-    hpr::hpr
-    imgui
-)
+#target_include_directories(${PROJECT_NAME}
+#    PRIVATE
+#    ../
+#)
 
-target_include_directories(${PROJECT_NAME}
-    PRIVATE
-    ../
-)
+#set(CMAKE_CXX_STANDARD 20)
+#add_executable(testi
+#    test.cpp
+#)
 
+#target_include_directories(testi
+#    PRIVATE
+#    ../
+#)
+
+#target_link_libraries(testi
+#    hpr::hpr
+#    imgui
+#)
 set(CMAKE_CXX_STANDARD 20)
-add_executable(testi
-    test.cpp
-)
 
-target_include_directories(testi
-    PRIVATE
-    ../
-)
+add_executable(hyporo-creator
+        test2.cpp
+        )
 
-target_link_libraries(testi
-    hpr::hpr
-    imgui
-)
+target_include_directories(hyporo-creator
+        PRIVATE
+        ../
+        )
+
+target_link_libraries(hyporo-creator
+        hpr::gpu
+        hpr::window-system
+        imgui
+        )

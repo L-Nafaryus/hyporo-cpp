@@ -63,4 +63,6 @@ install(
 )
 
 
-
+if(HPR_TEST)
+    add_subdirectory(tests)
+endif()

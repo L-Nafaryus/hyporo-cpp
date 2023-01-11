@@ -1,23 +1,49 @@
 #pragma once
 
-#include "../vector.hpp"
+#include "../integer.hpp"
+#include "../scalar.hpp"
+#include "../../containers/array/static_array.hpp"
 
 
 namespace hpr
 {
 
-template <typename Type, size_t Rows, size_t Cols>
-class MatrixSpace : public VectorSpace<Type, Rows * Cols>
-{
-    static_assert(Rows >= 1);
-    static_assert(Cols >= 1);
-    using base = VectorSpace<Type, Rows * Cols>;
+// forward declarations
 
-    using Minor = typename std::conditional<(Rows >= 2 && Cols >= 2), MatrixSpace<Type, Rows - 1, Cols - 1>, MatrixSpace<Type, 1, 1>>::type;
+template <IsReal Type, Size Rows, Size Cols> requires (Rows >= 0 && Cols >= 0)
+class Matrix;
+
+template <IsReal Type, Size Rows, Size Cols>
+using SubMatrix = typename std::conditional<(Rows >= 2 && Cols >= 2), Matrix<Type, Rows - 1, Cols - 1>, Matrix<Type, 1, 1>>::type;
+
+// type traits
+
+template <typename T>
+struct is_matrix : public std::false_type {};
+
+template <typename T, Size Rows, Size Cols>
+struct is_matrix<Matrix<T, Rows, Cols>> : public std::true_type {};
+
+// concepts
+
+template <typename T>
+concept IsMatrix = is_matrix<T>::value;
+
+}
+
+namespace hpr
+{
+
+template <IsReal Type, Size Rows, Size Cols> requires (Rows >= 0 && Cols >= 0)
+class Matrix : public StaticArray<Type, Rows * Cols>
+{
+
+    using base = StaticArray<Type, Rows * Cols>;
+
 public:
 
     using value_type = Type;
-    using size_type = size_t;
+    using size_type = Size;
     using pointer = Type*;
     using reference = Type&;
     using iterator = Iterator<Type>;
@@ -26,82 +52,101 @@ public:
 
 protected:
 
-    static
-    const size_type p_mrows = Rows - 1;
-    static
-    const size_type p_mcols = Cols - 1;
     size_type p_rows;
     size_type p_cols;
 
 public:
 
     inline
-    MatrixSpace() :
+    Matrix() :
         base {},
         p_rows {Rows},
         p_cols {Cols}
     {}
 
     inline
-    MatrixSpace(const MatrixSpace& ms) :
+    Matrix(const Matrix& ms) :
         base {static_cast<base>(ms)},
         p_rows {Rows},
         p_cols {Cols}
     {}
 
-    inline explicit
-    MatrixSpace(const base& ms) :
-        base {ms},
+    inline
+    Matrix(Matrix&& ms) noexcept:
+        base {std::forward<base>(static_cast<base>(ms))},
         p_rows {Rows},
         p_cols {Cols}
     {}
 
     inline
-    MatrixSpace(MatrixSpace&& ms) noexcept :
-        base {std::move(static_cast<base>(ms))},
-        p_rows {Rows},
-        p_cols {Cols}
-    {}
-
-    inline
-    MatrixSpace& operator=(const MatrixSpace& ms)
+    Matrix& operator=(const Matrix& ms)
     {
         base::operator=(ms);
         return *this;
     }
 
+    inline explicit
+    Matrix(const base& vs) :
+            base {vs},
+            p_rows {Rows},
+            p_cols {Cols}
+    {}
+
+    inline explicit
+    Matrix(base&& vs) noexcept:
+        base {std::forward<base>(vs)},
+        p_rows {Rows},
+        p_cols {Cols}
+    {}
+
     inline
-    MatrixSpace(typename base::iterator start, typename base::iterator end) :
+    Matrix(typename base::iterator start, typename base::iterator end) :
         base {start, end},
         p_rows {Rows},
         p_cols {Cols}
     {}
 
     inline
-    MatrixSpace(typename base::const_iterator start, typename base::const_iterator end) :
+    Matrix(typename base::const_iterator start, typename base::const_iterator end) :
         base {start, end},
         p_rows {Rows},
         p_cols {Cols}
     {}
 
     inline
-    MatrixSpace(std::initializer_list<value_type> list) :
+    Matrix(std::initializer_list<value_type> list) :
         base {list},
         p_rows {Rows},
         p_cols {Cols}
     {}
 
-    template <std::convertible_to<value_type>... Args>
+    template <IsReal... Args>
     inline
-    MatrixSpace(value_type&& v, Args&& ...args) :
+    Matrix(value_type&& v, Args&& ...args) requires (1 + sizeof...(args) == Rows * Cols):
         base {v, static_cast<value_type>(std::forward<Args>(args))...},
         p_rows {Rows},
         p_cols {Cols}
+    {}
+
+    inline
+    Matrix(const value_type& v) :
+        base {},
+        p_rows {Rows},
+        p_cols {Cols}
     {
-        static_assert(1 + sizeof...(args) == Rows * Cols, "Number of arguments must be equal to rows * cols of matrix");
+        for (Size n = 0; n < Rows * Cols; ++n)
+            (*this)[n] = v;
     }
 
-    // Member functions
+    inline
+    Matrix& operator=(const value_type& v)
+    {
+        for (Size n = 0; n < Rows * Cols; ++n)
+            (*this)[n] = v;
+        return *this;
+    }
+
+    // access
 
     inline
     reference operator()(size_type row, size_type col)
@@ -123,154 +168,56 @@ public:
         return (*this)[col + p_rows * row];
     }
 
-    VectorSpace<value_type, Cols> row(size_type row)
+    Vector<value_type, Cols> row(size_type row)
     {
-        VectorSpace<value_type, Cols> vs;
+        Vector<value_type, Cols> vs;
         for (auto n = 0; n < Cols; ++n)
             vs[n] = (*this)(row, n);
         return vs;
     }
 
-    VectorSpace<value_type, Cols> row(size_type row) const
+    Vector<value_type, Cols> row(size_type row) const
     {
-        VectorSpace<value_type, Cols> vs;
+        Vector<value_type, Cols> vs;
         for (auto n = 0; n < Cols; ++n)
             vs[n] = (*this)(row, n);
         return vs;
     }
 
-    void row(size_type row, const VectorSpace<value_type, Cols>& vs)
+    void row(size_type row, const Vector<value_type, Cols>& vs)
     {
         for (auto n = 0; n < Cols; ++n)
             (*this)(n, row) = vs[n];
     }
 
-    VectorSpace<value_type, Rows> col(size_type col)
+    Vector<value_type, Rows> col(size_type col)
     {
-        VectorSpace<value_type, Rows> vs;
+        Vector<value_type, Rows> vs;
         for (auto n = 0; n < Rows; ++n)
             vs[n] = (*this)(n, col);
         return vs;
     }
 
-    void col(size_type col, const VectorSpace<value_type, Rows>& vs)
+    void col(size_type col, const Vector<value_type, Rows>& vs)
     {
         for (auto n = 0; n < Rows; ++n)
             (*this)(n, col) = vs[n];
     }
 
-    size_type rows() const { return p_rows; }
-    size_type cols() const { return p_cols; }
+    [[nodiscard]] constexpr size_type rows() const { return p_rows; }
+    [[nodiscard]] constexpr size_type cols() const { return p_cols; }
+
+    // member functions
 
     [[nodiscard]]
-    inline
+    constexpr
     bool is_square() const
     {
         return p_rows == p_cols;
     }
 
     inline
-    Minor minor(size_type row, size_type col)
-    {
-        if (this->size() < 4)
-            throw std::runtime_error("Impossible to find minor for matrix with size less than 2x2");
-        Minor minor;
-        auto minor_iter = minor.begin();
-        for (auto n = 0; n < Rows; ++n)
-            for (auto k = 0; k < Cols; ++k)
-                if (k != col && n != row)
-                    *(minor_iter++) = (*this)[k + p_rows * n];
-        return minor;
-    }
-
-    inline
-    value_type det()
-    {
-        if (!is_square())
-            throw std::runtime_error("Matrix must be square");
-        if (this->size() == 1)
-            return (*this)[0];
-        else if (this->size() == 4)
-            return (*this)(0, 0) * (*this)(1, 1) - (*this)(0, 1) * (*this)(1, 0);
-        else {
-            auto res = 0;
-            for (auto m = 0; m < Cols; ++m)
-                res += std::pow(-1, m) * (*this)(0, m) * minor(0, m).det();
-            return res;
-        }
-    }
-
-    inline
-    MatrixSpace transpose()
-    {
-        MatrixSpace ms;
-        for (auto n = 0; n < Rows; ++n)
-            for (auto k = 0; k < Cols; ++k)
-                ms(k, n) = (*this)(n, k);
-        return ms;
-    }
-
-    inline
-    MatrixSpace adj()
-    {
-        MatrixSpace ms;
-        for (auto n = 0; n < Rows; ++n)
-            for (auto k = 0; k < Cols; ++k)
-            {
-                ms(n, k) = std::pow(-1, n + k) * minor(n, k).det();
-            }
-        return ms.transpose();
-    }
-
-    inline
-    MatrixSpace inv()
-    {
-        return MatrixSpace(adj() / det());
-    }
-
-    // Friend functions
-
-    friend inline
-    bool operator==(const MatrixSpace& lhs, const MatrixSpace& rhs)
-    {
-        for (auto n = 0; n < lhs.size(); ++n)
-            if (lhs[n] != rhs[n])
-                return false;
-        return true;
-    }
-
-    friend inline
-    bool operator!=(const MatrixSpace& lhs, const MatrixSpace& rhs)
-    {
-        return !(lhs == rhs);
-    }
-
-    template <typename T, size_type S>
-    friend inline
-    bool operator==(const MatrixSpace& lhs, const VectorSpace<T, S>& rhs)
-    {
-        return false;
-    }
-
-    friend inline
-    VectorSpace<Type, Cols> operator*(const VectorSpace<Type, Cols>& vs, const MatrixSpace& ms)
-    {
-        VectorSpace<Type, Cols> res;
-        for (auto n = 0; n < Cols; ++n)
-            res[0] = sum(ms.col(n) * vs);
-        return res;
-    }
-
-    friend inline
-    VectorSpace<Type, Rows> operator*(const MatrixSpace& ms, const VectorSpace<Type, Rows>& vs)
-    {
-        VectorSpace<Type, Rows> res;
-        for (auto n = 0; n < Rows; ++n)
-            res[0] = sum(ms.row(n) * vs);
-        return res;
-    }
-
-    MatrixSpace& fill(value_type value)
+    Matrix& fill(value_type value)
     {
         for (auto n = 0; n < this->size(); ++n)
             (*this)[n] = value;
@@ -280,9 +227,9 @@ public:
     // Global functions
 
     static inline
-    MatrixSpace identity()
+    Matrix identity()
     {
-        MatrixSpace ms;
+        Matrix ms;
         for (auto n = 0; n < Rows; ++n)
             for (auto k = 0; k < Cols; ++k)
                 ms(n, k) = 1;
@@ -290,13 +237,128 @@ public:
     }
 };
 
+// global operators
+
+template <IsReal T, Size R, Size C> inline Matrix<T, R, C> operator+(const Matrix<T, R, C>& lhs) { Matrix<T, R, C> ms; for (Size n = 0; n < lhs.size(); ++n) ms[n] = lhs[n]; return ms; }
+template <IsReal T, Size R, Size C> inline Matrix<T, R, C> operator-(const Matrix<T, R, C>& lhs) { Matrix<T, R, C> ms; for (Size n = 0; n < lhs.size(); ++n) ms[n] = -lhs[n]; return ms; }
+
+template <IsReal T, Size R, Size C> inline Matrix<T, R, C>& operator+=(Matrix<T, R, C>& lhs, const Matrix<T, R, C>& rhs) { for (Size n = 0; n < lhs.size(); ++n) lhs[n] += rhs[n]; return lhs; }
+template <IsReal T, Size R, Size C> inline Matrix<T, R, C>& operator-=(Matrix<T, R, C>& lhs, const Matrix<T, R, C>& rhs) { for (Size n = 0; n < lhs.size(); ++n) lhs[n] -= rhs[n]; return lhs; }
+template <IsReal T, Size R, Size C, Size R2, Size C2> requires (R == C2 && R2 == C) inline Matrix<T, R, C>& operator*=(Matrix<T, R, C>& lhs, const Matrix<T, R, C>& rhs) { Matrix<T, R, C> temp {lhs}; for (Size n = 0; n < R; ++n) for (Size k = 0; k < C; ++k) lhs(n, k) = sum(temp.col(k) * rhs.row(n)); return lhs; }
+
+template <IsReal T, Size R, Size C> inline Matrix<T, R, C> operator+(const Matrix<T, R, C>& lhs, const Matrix<T, R, C>& rhs) { Matrix<T, R, C> ms {lhs}; for (Size n = 0; n < lhs.size(); ++n) ms[n] += rhs[n]; return ms; }
+template <IsReal T, Size R, Size C> inline Matrix<T, R, C> operator-(const Matrix<T, R, C>& lhs, const Matrix<T, R, C>& rhs) { Matrix<T, R, C> ms {lhs}; for (Size n = 0; n < lhs.size(); ++n) ms[n] -= rhs[n]; return ms; }
+template <IsReal T, Size R, Size C, Size R2, Size C2> requires (R == C2 && R2 == C) inline Matrix<T, R, C> operator*(const Matrix<T, R, C>& lhs, const Matrix<T, R, C>& rhs) { Matrix<T, R, C> ms; for (Size n = 0; n < R; ++n) for (Size k = 0; k < C; ++k) ms(n, k) = sum(lhs.col(k) * rhs.row(n)); return ms; }
+
+template <IsReal T, Size R, Size C> inline bool operator==(const Matrix<T, R, C>& lhs, const Matrix<T, R, C>& rhs) { for (Size n = 0; n < lhs.size(); ++n) if (lhs[n] != rhs[n]) return false; return true; }
+template <IsReal T, Size R, Size C> inline bool operator!=(const Matrix<T, R, C>& lhs, const Matrix<T, R, C>& rhs) { for (Size n = 0; n < lhs.size(); ++n) if (lhs[n] == rhs[n]) return false; return true; }
+
+
+template <IsReal T, Size R, Size C> inline Matrix<T, R, C>& operator+=(Matrix<T, R, C>& lhs, const T& rhs) { for (Size n = 0; n < lhs.size(); ++n) lhs[n] += rhs; return lhs; }
+template <IsReal T, Size R, Size C> inline Matrix<T, R, C>& operator-=(Matrix<T, R, C>& lhs, const T& rhs) { for (Size n = 0; n < lhs.size(); ++n) lhs[n] -= rhs; return lhs; }
+template <IsReal T, Size R, Size C> inline Matrix<T, R, C>& operator*=(Matrix<T, R, C>& lhs, const T& rhs) { for (Size n = 0; n < lhs.size(); ++n) lhs[n] *= rhs; return lhs; }
+template <IsReal T, Size R, Size C> inline Matrix<T, R, C>& operator/=(Matrix<T, R, C>& lhs, const T& rhs) { for (Size n = 0; n < lhs.size(); ++n) lhs[n] /= rhs; return lhs; }
+
+template <IsReal T, Size R, Size C> inline Matrix<T, R, C> operator+(const Matrix<T, R, C>& lhs, const T& rhs) { Matrix<T, R, C> ms {lhs}; for (Size n = 0; n < lhs.size(); ++n) ms[n] += rhs; return ms; }
+template <IsReal T, Size R, Size C> inline Matrix<T, R, C> operator-(const Matrix<T, R, C>& lhs, const T& rhs) { Matrix<T, R, C> ms {lhs}; for (Size n = 0; n < lhs.size(); ++n) ms[n] -= rhs; return ms; }
+template <IsReal T, Size R, Size C> inline Matrix<T, R, C> operator*(const Matrix<T, R, C>& lhs, const T& rhs) { Matrix<T, R, C> ms {lhs}; for (Size n = 0; n < lhs.size(); ++n) ms[n] *= rhs; return ms; }
+template <IsReal T, Size R, Size C> inline Matrix<T, R, C> operator/(const Matrix<T, R, C>& lhs, const T& rhs) { Matrix<T, R, C> ms {lhs}; for (Size n = 0; n < lhs.size(); ++n) ms[n] /= rhs; return ms; }
+
+
+template <IsReal T, Size R, Size C> inline Vector<T, R> operator*(const Matrix<T, R, C>& ms, const Vector<T, R>& vs) { Vector<T, R> res; for (Size n = 0; n < R; ++n) res[0] = sum(ms.row(n) * vs); return res; }
+template <IsReal T, Size R, Size C> inline Vector<T, C> operator*(const Vector<T, R>& vs, const Matrix<T, R, C>& ms) { Vector<T, C> res; for (Size n = 0; n < C; ++n) res[0] = sum(ms.col(n) * vs); return res; }
+
+template <IsReal T, Size R, Size C> inline bool operator==(const Matrix<T, R, C>& lhs, const Vector<T, R * C>& rhs) { return false; }
+template <IsReal T, Size R, Size C> inline bool operator!=(const Matrix<T, R, C>& lhs, const Vector<T, R * C>& rhs) { return true; }
+
+// matrix operations
+
+//! Transpose matrix
+template <IsReal T, Size R, Size C>
+inline
+Matrix<T, R, C> transpose(const Matrix<T, R, C>& ms)
+{
+    Matrix<T, R, C> res;
+    for (Size n = 0; n < R; ++n)
+        for (Size k = 0; k < C; ++k)
+            res(k, n) = ms(n, k);
+    return res;
+}
+
+//! Trace of a matrix
+template <IsReal T, Size R, Size C>
+inline
+T trace(const Matrix<T, R, C>& ms) requires (R == C)
+{
+    T res;
+    for (auto n = 0; n < R; ++n)
+        res += ms(n, n);
+    return res;
+}
+
+//! Minor of a matrix
+template <IsReal T, Size R, Size C>
+inline
+SubMatrix<T, R, C> minor(const Matrix<T, R, C>& ms, Size row, Size col)
+{
+    if (ms.size() < 4)
+        throw std::runtime_error("Matrix should be greater 2x2");
+
+    SubMatrix<T, R, C> minor;
+    auto minor_iter = minor.begin();
+    for (auto n = 0; n < R; ++n)
+        for (auto k = 0; k < C; ++k)
+            if (k != col && n != row)
+                *(minor_iter++) = ms[k + ms.rows() * n];
+    return minor;
+}
+
+//! Determinant of a matrix
+template <IsReal T, Size R, Size C>
+inline
+scalar det(const Matrix<T, R, C>& ms) requires (R == C)
+{
+    if (ms.size() == 1)
+        return ms[0];
+
+    else if (ms.size() == 4)
+        return ms(0, 0) * ms(1, 1) - ms(0, 1) * ms(1, 0);
+
+    else {
+        scalar res = 0;
+        for (auto n = 0; n < ms.cols(); ++n)
+            res += pow(-1, n) * ms(0, n) * det(minor(ms, 0, n));
+        return res;
+    }
+}
+
+//! Adjoint matrix
+template <IsReal T, Size R, Size C>
+inline
+Matrix<T, R, C> adj(const Matrix<T, R, C>& ms)
+{
+    Matrix<T, R, C> res;
+    for (auto n = 0; n < R; ++n)
+        for (auto k = 0; k < C; ++k)
+            res(n, k) = pow(-1, n + k) * det(minor(ms, n, k));
+    return transpose(res);
+}
+
+//! Inverse matrix
+template <IsReal T, Size R, Size C>
+inline
+Matrix<T, R, C> inv(const Matrix<T, R, C>& ms)
+{
+    return adj(ms) / det(ms);
+}
+
 // Aliases
 
 template <typename Type, size_t Row, size_t Col>
-using mat = MatrixSpace<Type, Row, Col>;
+using mat = Matrix<Type, Row, Col>;
 
-using mat2 = MatrixSpace<scalar, 2, 2>;
-using mat3 = MatrixSpace<scalar, 3, 3>;
-using mat4 = MatrixSpace<scalar, 4, 4>;
+using mat2 = Matrix<scalar, 2, 2>;
+using mat3 = Matrix<scalar, 3, 3>;
+using mat4 = Matrix<scalar, 4, 4>;
 
 }

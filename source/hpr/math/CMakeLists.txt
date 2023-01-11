@@ -10,7 +10,7 @@ add_library(${CMAKE_PROJECT_NAME}::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
 add_module(${PROJECT_NAME})
 
 file(GLOB ${CMAKE_PROJECT_NAME}_${PROJECT_NAME}_HEADERS
-    "../math.hpp" "*.hpp" "scalar/*.hpp" "vector/*.hpp" "matrix/*.hpp"
+    "../math.hpp" "*.hpp" "scalar/*.hpp" "vector/*.hpp" "matrix/*.hpp" "quaternion/*.hpp"
 )
 
 foreach(_header_path ${${CMAKE_PROJECT_NAME}_${PROJECT_NAME}_HEADERS})

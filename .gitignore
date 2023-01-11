@@ -1,3 +1,4 @@
+cmake-wsl-build-debug
 cmake-build-debug/
 .idea/
 build/

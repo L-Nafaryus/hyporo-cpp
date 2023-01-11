@@ -4,6 +4,7 @@
 
 #include <limits>
 #include <functional>
+#include <concepts>
 
 
 namespace hpr
@@ -170,7 +171,7 @@ public:
         return const_iterator(p_end);
     }
 
-    [[nodiscard]] virtual
+    [[nodiscard]] virtual constexpr
     size_type size() const
     {
         return size_type(p_end - p_start);

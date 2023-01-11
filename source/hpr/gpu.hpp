@@ -1,15 +1,15 @@
 #pragma once
 
-#include "gpu/context.hpp"
+
+#include "gpu/array_object.hpp"
+#include "gpu/buffer_object.hpp"
+#include "gpu/color_buffer.hpp"
+#include "gpu/cull_face.hpp"
+#include "gpu/depth_buffer.hpp"
+#include "gpu/framebuffer.hpp"
+#include "gpu/renderbuffer.hpp"
 #include "gpu/shader.hpp"
 #include "gpu/shader_program.hpp"
-#include "gpu/buffer.hpp"
-#include "gpu/device.hpp"
+#include "gpu/stencil_buffer.hpp"
 #include "gpu/texture.hpp"
-
-#include "gpu/opengl/context.hpp"
-#include "gpu/opengl/shader.hpp"
-#include "gpu/opengl/shader_program.hpp"
-#include "gpu/opengl/buffer.hpp"
-#include "gpu/opengl/device.hpp"
-#include "gpu/opengl/texture.hpp"
+#include "gpu/viewport.hpp"

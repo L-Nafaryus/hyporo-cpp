@@ -5,6 +5,8 @@ add_subdirectory(containers)
 add_subdirectory(math)
 add_subdirectory(io)
 add_subdirectory(mesh)
+add_subdirectory(geometry)
+
 if(WITH_CSG)
     include(${CMAKE_SOURCE_DIR}/cmake/external/occt.cmake)
     add_subdirectory(csg)

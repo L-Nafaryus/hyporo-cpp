@@ -6,11 +6,11 @@
 namespace hpr
 {
 
-template <typename Type>
+template <IsReal T>
 inline
-MatrixSpace<Type, 4, 4> ortho(Type left, Type right, Type bottom, Type top)
+Matrix<T, 4, 4> ortho(T left, T right, T bottom, T top)
 {
-    MatrixSpace<Type, 4, 4> ms;
+    Matrix<T, 4, 4> ms;
     ms.fill(1);
     ms(0, 0) = 2 / (right - left);
     ms(1, 1) = 2 / (top - bottom);
@@ -20,12 +20,12 @@ MatrixSpace<Type, 4, 4> ortho(Type left, Type right, Type bottom, Type top)
     return ms;
 }
 
-template <typename Type>
+template <IsReal T>
 inline
-MatrixSpace<Type, 4, 4> ortho(Type left, Type right, Type bottom, Type top, Type zNear, Type zFar)
+Matrix<T, 4, 4> ortho(T left, T right, T bottom, T top, T zNear, T zFar)
 {
-    MatrixSpace<Type, 4, 4> ms;
-    ms.fill(1);
+    Matrix<T, 4, 4> ms {1};
+    //ms.fill(1);
     ms(0, 0) = 2 / (right - left);
     ms(1, 1) = 2 / (top - bottom);
     ms(2, 2) = 2 / (zFar - zNear);
@@ -35,13 +35,13 @@ MatrixSpace<Type, 4, 4> ortho(Type left, Type right, Type bottom, Type top, Type
     return ms;
 }
 
-template <typename Type>
+template <IsReal T>
 inline
-MatrixSpace<Type, 4, 4> perspective(Type fovy, Type aspect, Type zNear, Type zFar)
+Matrix<T, 4, 4> perspective(T fovy, T aspect, T zNear, T zFar)
 {
-    assert(abs(aspect - std::numeric_limits<Type>::epsilon()) > 0);
-    MatrixSpace<Type, 4, 4> ms;
-    const Type halfFovyTan = tan(fovy / 2);
+    assert(abs(aspect - std::numeric_limits<T>::epsilon()) > 0);
+    Matrix<T, 4, 4> ms;
+    const T halfFovyTan = tan(fovy / 2);
     ms(0, 0) = 1 / (aspect * halfFovyTan);
     ms(1, 1) = 1 / halfFovyTan;
     ms(2, 2) = (zFar + zNear) / (zFar - zNear);

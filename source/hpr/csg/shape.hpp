@@ -364,7 +364,7 @@ public:
     Shape rotate(const vec3& pos, const vec3& axis, double angle)
     {
         gp_Trsf transform;
-        transform.SetRotation(gp_Ax1({pos[0], pos[1], pos[2]}, {axis[0], axis[1], axis[2]}), radians(angle));
+        transform.SetRotation(gp_Ax1({pos[0], pos[1], pos[2]}, {axis[0], axis[1], axis[2]}), rad(angle));
         BRepBuilderAPI_Transform builder {p_shape, transform, true};
 
         return builder.Shape();
