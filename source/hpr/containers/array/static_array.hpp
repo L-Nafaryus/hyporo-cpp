@@ -1,257 +1,150 @@
 #pragma once
 
-#include "iterator.hpp"
-
-#include <limits>
-#include <functional>
-#include <concepts>
+#include <hpr/containers/array/sequence.hpp>
 
 
 namespace hpr
 {
 
-template <typename Type, size_t Size>
-class StaticArray
+// forward declaration
+
+template <typename T, Size S>
+requires (S > 0)
+class StaticArray;
+
+// type traits
+
+template <typename T, Size S>
+struct is_sequence<StaticArray<T, S>> : public std::true_type
+{};
+
+// aliases
+
+template <typename T, Size S>
+using sarray = StaticArray<T, S>;
+
+// class definition
+
+template <typename T, Size S>
+requires (S > 0)
+class StaticArray : public Sequence<T>
 {
+
+    using base = Sequence<T>;
 
 public:
 
     using difference_type = std::ptrdiff_t;
-    using value_type = Type;
-    using size_type = size_t;
-    using pointer = Type*;
-    using reference = Type&;
-    using iterator = Iterator<Type>;
-    using const_pointer = Type const*;
-    using const_reference = Type const&;
-    using const_iterator = Iterator<const Type>;
-
-protected:
-
-    const size_type p_size;
-    pointer p_start;
-    pointer p_end;
-
-protected:
-
-    inline
-    StaticArray(size_type size, pointer start, pointer end) :
-        p_size {size},
-        p_start {start},
-        p_end {end}
-    {}
+    using value_type = T;
+    using size_type = Size;
+    using pointer = T*;
+    using reference = T&;
+    using iterator = Iterator<T>;
+    using const_pointer = T const*;
+    using const_reference = T const&;
+    using const_iterator = Iterator<const T>;
 
 public:
 
-    inline
-    StaticArray() :
-            p_size {Size},
-            p_start {new value_type[p_size] {}},
-            p_end {p_start + p_size}
+    friend constexpr
+    void swap(StaticArray& main, StaticArray& other) noexcept
+    {
+        using std::swap;
+        swap(static_cast<base&>(main), static_cast<base&>(other));
+    }
+
+    //! Default constructor
+    constexpr
+    StaticArray() noexcept :
+        base {S, S, new value_type[S] {}}
     {}
 
-    inline
-    StaticArray(const StaticArray& arr) :
-            p_size {arr.p_size},
-            p_start {new value_type[arr.p_size]},
-            p_end {p_start + p_size}
-    {
-        std::copy(arr.p_start, arr.p_end, p_start);
-    }
+    constexpr explicit
+    StaticArray(const base& b) noexcept :
+        base {b}
+    {}
+
+    //! Copy constructor
+    constexpr
+    StaticArray(const StaticArray& arr) noexcept :
+        base {static_cast<base>(arr)}
+    {}
 
     //! Move constructor
-    inline
+    constexpr
     StaticArray(StaticArray&& arr) noexcept :
-        StaticArray {}
-    {
-        swap(*this, arr);
-    }
+        base {std::forward<base>(static_cast<base>(arr))}
+    {}
 
-    inline
-    StaticArray(const_iterator start, const_iterator end) :
-        p_size {Size},
-        p_start {new value_type[p_size]},
-        p_end {p_start + p_size}
-    {
-        std::copy(start, end, p_start);
-    }
+    constexpr
+    StaticArray(typename base::iterator start, typename base::iterator end) :
+        base {start, end}
+    {}
 
-    inline
-    StaticArray(iterator start, iterator end) :
-        p_size {Size},
-        p_start {new value_type[p_size]},
-        p_end {p_start + p_size}
-    {
-        std::copy(start, end, p_start);
-    }
+    constexpr
+    StaticArray(typename base::const_iterator start, typename base::const_iterator end) :
+        base {start, end}
+    {}
 
-    inline
+    constexpr
+    StaticArray(typename base::iterator start, typename base::iterator end, size_type capacity) :
+        base {start, end, capacity}
+    {}
+
+    constexpr
+    StaticArray(typename base::const_iterator start, typename base::const_iterator end, size_type capacity) :
+        base {start, end, capacity}
+    {}
+
+    constexpr
     StaticArray(std::initializer_list<value_type> list) :
-        StaticArray {list.begin(), list.end()}
+        base {list.begin(), list.end()}
     {}
 
     template <std::convertible_to<value_type>... Args>
-    inline
-    StaticArray(const value_type& v, const Args& ...args) :
-        StaticArray {std::initializer_list<value_type>({std::forward<value_type>(v),
-            std::forward<value_type>(static_cast<value_type>(args))...})}
-    {
-        static_assert(1 + sizeof...(args) == Size, "Number of arguments must be equal to size of array");
-    }
+    constexpr explicit
+    StaticArray(const value_type& v, const Args& ...args)
+    requires (1 + sizeof...(args) == S) :
+        StaticArray {std::initializer_list<value_type>({v, static_cast<value_type>(args)...})}
+    {}
 
     template <std::convertible_to<value_type>... Args>
-    inline
-    StaticArray(value_type&& v, Args&& ...args) :
-        StaticArray {std::initializer_list<value_type>({std::forward<value_type>(v),
-            std::forward<value_type>(static_cast<value_type>(args))...})}
-    {
-        static_assert(1 + sizeof...(args) == Size, "Number of arguments must be equal to size of array");
-    }
+    constexpr explicit
+    StaticArray(value_type&& v, Args&& ...args)
+    requires (1 + sizeof...(args) == S) :
+        StaticArray {std::initializer_list<value_type>({std::forward<value_type>(v), std::forward<value_type>(static_cast<value_type>(args))...})}
+    {}
 
-    template <size_type SubSize, std::convertible_to<value_type>... Args>
-    inline
-    StaticArray(const StaticArray<value_type, SubSize>& subarr, const value_type& v, const Args& ...args) :
-        p_size {Size},
-        p_start {new value_type[p_size]},
-        p_end {p_start + p_size}
+    template <size_type SS, std::convertible_to<value_type>... Args>
+    constexpr
+    StaticArray(const StaticArray<value_type, SS>& subArr, const value_type& v, const Args& ...args) noexcept
+    requires (SS + 1 + sizeof...(args) == S) :
+        base {S, S, new value_type[S] {}}
     {
-        static_assert(SubSize + 1 + sizeof...(args) == Size,
-            "Number of arguments and sub-array elements must be equal to size of main array");
+        std::copy(subArr.begin(), subArr.end(), base::begin());
         std::initializer_list<value_type> list {v, static_cast<value_type>(args)...};
-        std::copy(subarr.begin(), subarr.end(), begin());
-        size_type pos {subarr.size()};
-        for (auto& val : list)
-            (*this)[pos++] = val;
+        std::copy(list.begin(), list.end(), base::begin() + subArr.size());
     }
 
-    inline
-    StaticArray& operator=(const StaticArray& vs)
+    constexpr
+    StaticArray& operator=(StaticArray other)
     {
-        std::copy(vs.begin(), vs.end(), begin());
+        swap(*this, other);
         return *this;
     }
 
-    inline
-    StaticArray& operator=(StaticArray&& arr) noexcept
+    constexpr
+    StaticArray& operator=(StaticArray&& other) noexcept
     {
-        swap(*this, arr);
+        swap(*this, other);
         return *this;
     }
 
     virtual
-    ~StaticArray()
-    {
-        //std::destroy(p_start, p_end);
-        delete[] p_start;
-    }
+    ~StaticArray() = default;
 
-    // Member functions
 
-    virtual
-    iterator begin()
-    {
-        return iterator(p_start);
-    }
-
-    [[nodiscard]] virtual
-    const_iterator begin() const
-    {
-        return const_iterator(p_start);
-    }
-
-    virtual
-    iterator end()
-    {
-        return iterator(p_end);
-    }
-
-    virtual
-    const_iterator end() const
-    {
-        return const_iterator(p_end);
-    }
-
-    [[nodiscard]] virtual constexpr
-    size_type size() const
-    {
-        return size_type(p_end - p_start);
-    }
-
-    [[nodiscard]] virtual
-    bool is_empty() const
-    {
-        return begin() == end();
-    }
-
-    virtual
-    reference operator[](size_type n)
-    {
-        if (n >= size())
-            throw std::out_of_range("Index out of bounds");
-        return *(p_start + n);
-    }
-
-    virtual
-    const_reference operator[](size_type n) const
-    {
-        if (n >= size())
-            throw std::out_of_range("Index out of bounds");
-        return *(p_start + n);
-    }
-
-    virtual
-    reference front()
-    {
-        return *p_start;
-    }
-
-    virtual
-    reference back()
-    {
-        return *(p_end - 1);
-    }
-
-    virtual
-    pointer data()
-    {
-        return p_start;
-    }
-
-    [[nodiscard]] virtual
-    const_pointer data() const
-    {
-        return p_start;
-    }
-
-    // Friend functions
-
-    friend
-    void swap(StaticArray& lhs, StaticArray& rhs)
-    {
-        std::swap(lhs.p_start, rhs.p_start);
-        std::swap(lhs.p_end, rhs.p_end);
-    }
-
-    friend
-    void swap(StaticArray&& lhs, StaticArray&& rhs)
-    {
-        std::swap(lhs.p_start, rhs.p_start);
-        std::swap(lhs.p_end, rhs.p_end);
-    }
-
-    friend
-    bool operator==(const StaticArray& lhs, const StaticArray& rhs)
-    {
-        for (auto n = 0; n < Size; ++n)
-            if (lhs[n] != rhs[n])
-                return false;
-        return true;
-    }
 };
 
-// Aliases
-
-template <typename Type, size_t Size>
-using sarray = StaticArray<Type, Size>;
 
 }

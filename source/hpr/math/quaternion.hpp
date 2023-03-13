@@ -1,3 +1,3 @@
 #pragma once
 
-#include "quaternion/quaternion.hpp"
+#include <hpr/math/quaternion/quaternion.hpp>

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "buffer_object.hpp"
+#include <hpr/gpu/buffer_object.hpp>
 
 #include <string>
 
@@ -13,11 +13,27 @@ namespace hpr::gpu
 
     class ArrayObject
     {
+    public:
 
+        enum Mode
+        {
+            Points = GL_POINTS,
+            LineStrip = GL_LINE_STRIP,
+            LineLoop = GL_LINE_LOOP,
+            Lines = GL_LINES,
+            LineStripAdjacency = GL_LINE_STRIP_ADJACENCY,
+            LinesAdjacency = GL_LINES_ADJACENCY,
+            TriangleStrip = GL_TRIANGLE_STRIP,
+            TriangleFan = GL_TRIANGLE_FAN,
+            Triangles = 0x0004, //GL_TRIANGLES,
+            TriangleStripAdjacency = GL_TRIANGLE_STRIP_ADJACENCY,
+            TrianglesAdjacency = GL_TRIANGLES_ADJACENCY,
+            Patches = GL_PATCHES
+        };
 
     protected:
 
-        unsigned int p_index;
+        GLuint p_index;
         int p_size;
         int p_stride;
         bool p_binded;
@@ -74,7 +90,7 @@ namespace hpr::gpu
             glDeleteVertexArrays(1, &p_index);
         }
 
-        void attribPointer(BufferObject& buffer, unsigned int location, unsigned int size)
+        void attribPointer(BufferObject& buffer, unsigned int location, int size)
         {
             if (buffer.type() == BufferObject::Type::Unknown)
                 throw std::runtime_error("Unknown buffer type");
@@ -84,14 +100,19 @@ namespace hpr::gpu
                 throw std::runtime_error("BufferObject is invalid");
 
             buffer.bind();
-            glVertexAttribPointer(location, size, GL_FLOAT, GL_FALSE, sizeof(float) * buffer.offset(), static_cast<void*>(nullptr));
             glEnableVertexAttribArray(location);
+            glVertexAttribPointer(location, size, GL_FLOAT, GL_FALSE, sizeof(float) * buffer.offset(), static_cast<void*>(nullptr));
             buffer.unbind();
         }
 
-        void draw()
+        void drawElements(Mode mode, int count) const
         {
+            glDrawElements(mode, count, GL_UNSIGNED_INT, nullptr);
+        }
 
+        void drawArrays(Mode mode, int count) const
+        {
+            glDrawArrays(mode, 0, count);
         }
 
         inline

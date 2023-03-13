@@ -1,13 +1,13 @@
 #pragma once
 
-#include "../containers/array.hpp"
-#include "../math/scalar/scalar.hpp"
-#include "../math/vector.hpp"
+#include <hpr/containers/array.hpp>
+#include <hpr/math/scalar/scalar.hpp>
+#include <hpr/math/vector.hpp>
 
-#include "vertex.hpp"
-#include "edge.hpp"
-#include "face.hpp"
-#include "cell.hpp"
+#include <hpr/mesh/vertex.hpp>
+#include <hpr/mesh/edge.hpp>
+#include <hpr/mesh/face.hpp>
+#include <hpr/mesh/cell.hpp>
 
 
 namespace hpr::mesh

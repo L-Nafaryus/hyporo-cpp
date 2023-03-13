@@ -2,6 +2,8 @@
 
 #include <cmath>
 #include <limits>
+#include <hpr/math/integer.hpp>
+
 
 namespace hpr
 {
@@ -83,7 +85,7 @@ public:
 
     // properties
 
-protected:
+/*protected:
 
     static value_type s_precision;
 
@@ -95,23 +97,44 @@ public:
 
     static constexpr Scalar<T> inf() { return std::numeric_limits<value_type>::infinity(); }
 
-    static constexpr Scalar<T> epsilon() { return std::numeric_limits<value_type>::epsilon(); }
+    static constexpr Scalar<T> epsilon() { return std::numeric_limits<value_type>::epsilon(); }*/
 };
 
 // specialization type
 
+#if defined(HPR_SCALAR_IMPLEMENTAION)
 #if defined(HPR_SCALAR_LONGDOUBLE)
+    using scalar_type = long double;
     using scalar = Scalar<long double>;
 #elif defined(HPR_SCALAR_DOUBLE)
+    using scalar_type = double;
     using scalar = Scalar<double>;
 #elif defined(HPR_SCALAR_FLOAT)
+    using scalar_type = float;
     using scalar = Scalar<float>;
 #else
+    using scalar_type = double;
     using scalar = Scalar<double>;
+#endif
+#else
+#if defined(HPR_SCALAR_LONGDOUBLE)
+    using scalar_type = long double;
+    using scalar = long double;
+#elif defined(HPR_SCALAR_DOUBLE)
+    using scalar_type = double;
+    using scalar = double;
+#elif defined(HPR_SCALAR_FLOAT)
+    using scalar_type = float;
+    using scalar = float;
+#else
+    using scalar_type = float;
+    using scalar = float;
+#endif
 #endif
 
 //
 
+#if defined(HPR_SCALAR_IMPLEMENTATION)
 template<> scalar::value_type scalar::s_precision = static_cast<scalar::value_type>(1e-15);
 
 // global operators
@@ -140,6 +163,8 @@ constexpr bool operator>(const scalar& lhs, const scalar& rhs) { return lhs.valu
 constexpr bool operator<(const scalar& lhs, const scalar& rhs) { return lhs.value() < rhs.value(); }
 constexpr bool operator>=(const scalar& lhs, const scalar& rhs) { return lhs.value() >= rhs.value(); }
 constexpr bool operator<=(const scalar& lhs, const scalar& rhs) { return lhs.value() <= rhs.value(); }
+
+//std::ostream& operator<<(std::ostream& stream, const scalar& s) { return stream << s.value(); }
 
 /// scalar vs Scalar<T>
 
@@ -215,67 +240,103 @@ template <IsReal T> constexpr bool operator>=(const T& lhs, const scalar& rhs) {
 template <IsReal T> constexpr bool operator<=(const scalar& lhs, const T& rhs) { return lhs.value() <= static_cast<scalar::value_type>(rhs); }
 template <IsReal T> constexpr bool operator<=(const T& lhs, const scalar& rhs) { return static_cast<scalar::value_type>(lhs) <= rhs.value(); }
 
+#endif
+
 // transcendentals
 
-template <IsReal T> constexpr scalar cos(const T& s) { return std::cos(static_cast<scalar::value_type>(s));}
+template <IsReal T> constexpr scalar cos(const T& s) { return std::cos(static_cast<scalar_type>(s));}
 
-template <IsReal T> constexpr scalar acos(const T& s) { return std::acos(scalar(s).value()); }
+template <IsReal T> constexpr scalar acos(const T& s) { return std::acos(static_cast<scalar_type>(s)); }
 
-template <IsReal T> constexpr scalar cosh(const T& s) { return std::cosh(scalar(s).value()); }
+template <IsReal T> constexpr scalar cosh(const T& s) { return std::cosh(static_cast<scalar_type>(s)); }
 
-template <IsReal T> constexpr scalar acosh(const T& s) { return std::acosh(scalar(s).value()); }
+template <IsReal T> constexpr scalar acosh(const T& s) { return std::acosh(static_cast<scalar_type>(s)); }
 
-template <IsReal T> constexpr scalar sin(const T& s) { return std::sin(scalar(s).value()); }
+template <IsReal T> constexpr scalar sin(const T& s) { return std::sin(static_cast<scalar_type>(s)); }
 
-template <IsReal T> constexpr scalar asin(const T& s) { return std::asin(scalar(s).value()); }
+template <IsReal T> constexpr scalar asin(const T& s) { return std::asin(static_cast<scalar_type>(s)); }
 
-template <IsReal T> constexpr scalar sinh(const T& s) { return std::sinh(scalar(s).value()); }
+template <IsReal T> constexpr scalar sinh(const T& s) { return std::sinh(static_cast<scalar_type>(s)); }
 
-template <IsReal T> constexpr scalar asinh(const T& s) { return std::asinh(scalar(s).value()); }
+template <IsReal T> constexpr scalar asinh(const T& s) { return std::asinh(static_cast<scalar_type>(s)); }
 
-template <IsReal T> constexpr scalar tan(const T& s) { return std::tan(scalar(s).value()); }
+template <IsReal T> constexpr scalar tan(const T& s) { return std::tan(static_cast<scalar_type>(s)); }
 
-template <IsReal T> constexpr scalar atan(const T& s) { return std::atan(scalar(s).value()); }
+template <IsReal T> constexpr scalar atan(const T& s) { return std::atan(static_cast<scalar_type>(s)); }
 
-template <IsReal T> constexpr scalar tanh(const T& s) { return std::tanh(scalar(s).value()); }
+template <IsReal T, IsReal X> constexpr scalar atan2(const T& s, const X& s2) { return std::atan2(static_cast<scalar_type>(s), static_cast<scalar_type>(s2)); }
 
-template <IsReal T> constexpr scalar atanh(const T& s) { return std::atanh(scalar(s).value()); }
+template <IsReal T> constexpr scalar tanh(const T& s) { return std::tanh(static_cast<scalar_type>(s)); }
 
-template <IsReal T> constexpr scalar exp(const T& s) { return std::exp(scalar(s).value()); }
+template <IsReal T> constexpr scalar atanh(const T& s) { return std::atanh(static_cast<scalar_type>(s)); }
 
-template <IsReal T> constexpr scalar log(const T& s) { return std::log(scalar(s).value()); }
+template <IsReal T> constexpr scalar exp(const T& s) { return std::exp(static_cast<scalar_type>(s)); }
 
-template <IsReal T> constexpr scalar log10(const T& s) { return std::log10(scalar(s).value()); }
+template <IsReal T> constexpr scalar log(const T& s) { return std::log(static_cast<scalar_type>(s)); }
 
-template <IsReal T, IsReal X> constexpr scalar pow(const T& s, const X& d) { return std::pow(scalar(s).value(), scalar(d).value()); }
+template <IsReal T> constexpr scalar log10(const T& s) { return std::log10(static_cast<scalar_type>(s)); }
 
-template <IsReal T> constexpr scalar sqrt(const T& s) { return std::sqrt(scalar(s).value()); }
+template <IsReal T, IsReal X> constexpr scalar pow(const T& s, const X& d) { return std::pow(static_cast<scalar_type>(s), static_cast<scalar_type>(d)); }
 
-template <IsReal T> constexpr scalar isqrt(const T& s) { return static_cast<T>(1) / sqrt(scalar(s).value()); }
+template <IsReal T> constexpr scalar sqrt(const T& s) { return std::sqrt(static_cast<scalar_type>(s)); }
+
+template <IsReal T> constexpr scalar isqrt(const T& s) { return static_cast<T>(1) / sqrt(static_cast<scalar_type>(s)); }
 
 // constants
 
-constexpr inline scalar pi() { return std::numbers::pi_v<scalar::value_type>; }
+constexpr scalar pi() { return std::numbers::pi_v<scalar_type>; }
 
-constexpr inline scalar e() { return std::numbers::e_v<scalar::value_type>; }
+constexpr scalar e() { return std::numbers::e_v<scalar_type>; }
 
 // etc
 
-constexpr scalar abs(const scalar& s) { return std::abs(s.value()); }
+static float _scalar_float_precision = 1e-15f;
+static double _scalar_double_precision = 1e-15;
+static long double _scalar_long_double_precision = 1e-15l;
 
-constexpr scalar mag(const scalar& s) { return std::abs(s.value()); }
+template <IsReal T> inline void precision(const T& precision)
+{
+    if constexpr (std::is_same<T, float>::value)
+        _scalar_float_precision = precision;
+    else if constexpr (std::is_same<T, double>::value)
+        _scalar_double_precision = precision;
+    else if constexpr (std::is_same<T, long double>::value)
+        _scalar_long_double_precision = precision;
+}
 
-constexpr bool equal(const scalar& lhs, const scalar& rhs, const scalar& precision = scalar::precision()) { return abs(lhs - rhs) < precision; }
+template <IsReal T> inline T precision()
+{
+    if constexpr (std::is_same<T, float>::value)
+        return _scalar_float_precision;
+    else if constexpr (std::is_same<T, double>::value)
+        return _scalar_double_precision;
+    else if constexpr (std::is_same<T, long double>::value)
+        return _scalar_long_double_precision;
+}
+
+
+
+constexpr scalar inf() { return std::numeric_limits<scalar_type>::infinity(); }
+
+constexpr scalar epsilon() { return std::numeric_limits<scalar_type>::epsilon(); }
+
+constexpr scalar isnan(const scalar& s) { return std::isnan(static_cast<scalar_type>(s)); }
+
+constexpr scalar abs(const scalar& s) { return std::abs(static_cast<scalar_type>(s)); }
+
+constexpr scalar mag(const scalar& s) { return std::abs(static_cast<scalar_type>(s)); }
+
+constexpr bool equal(const scalar& lhs, const scalar& rhs, const scalar& precision = hpr::precision<scalar>()) { return abs(lhs - rhs) < precision; }
 
 //! Convert degrees to radians
-constexpr scalar rad(const scalar& s) { return s * pi() / static_cast<scalar::value_type>(180); }
+constexpr scalar rad(const scalar& s) { return s * pi() / static_cast<scalar_type>(180); }
 
 //! Convert radians to degrees
-constexpr scalar deg(const scalar& s) { return s * static_cast<scalar::value_type>(180) / pi(); }
+constexpr scalar deg(const scalar& s) { return s * static_cast<scalar_type>(180) / pi(); }
 
-constexpr scalar min(const scalar& s1, const scalar& s2) { return std::min(s1.value(),s2.value());}
+constexpr scalar min(const scalar& s1, const scalar& s2) { return std::min(static_cast<scalar_type>(s1), static_cast<scalar_type>(s2));}
 
-constexpr scalar max(const scalar& s1, const scalar& s2) { return std::max(s1.value(), s2.value()); }
+constexpr scalar max(const scalar& s1, const scalar& s2) { return std::max(static_cast<scalar_type>(s1), static_cast<scalar_type>(s2)); }
 
 constexpr scalar clip(const scalar& s, const scalar& sMin, const scalar& sMax) { return min(sMax, max(s, sMin)); }
 

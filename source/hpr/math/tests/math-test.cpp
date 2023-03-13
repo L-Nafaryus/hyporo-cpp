@@ -1,22 +1,25 @@
 #include <gtest/gtest.h>
 
-#include "../vector.hpp"
-#include "../matrix.hpp"
-#include "../quaternion.hpp"
+#include <hpr/math/vector.hpp>
+#include <hpr/math/matrix.hpp>
+#include <hpr/math/quaternion.hpp>
+
 #include <complex>
+
 
 TEST(math, Scalar)
 {
     EXPECT_EQ(hpr::scalar(5) + hpr::scalar(7), hpr::scalar(12));
     EXPECT_TRUE(std::is_floating_point_v<hpr::Scalar<double>>);
     EXPECT_TRUE(std::is_arithmetic_v<hpr::Scalar<double>>);
-    EXPECT_EQ(5.f, hpr::Scalar<double>(5));
+    //EXPECT_EQ(5.f, hpr::Scalar<double>(5));
     EXPECT_EQ(hpr::rad(180), hpr::pi());
     EXPECT_EQ(hpr::deg(hpr::pi()), 180);
     EXPECT_EQ(hpr::cos(0), 1);
     EXPECT_EQ(hpr::sin(0), 0);
     EXPECT_EQ(hpr::abs(hpr::scalar(-1)), 1);
     EXPECT_EQ(hpr::pow(2, 2), 4);
+    EXPECT_EQ(hpr::precision<hpr::scalar>(), static_cast<hpr::scalar>(1e-15));
 
     EXPECT_TRUE(typeid(static_cast<float>(hpr::scalar(5))) == typeid(float));
     EXPECT_FALSE(!hpr::scalar(-1.));
@@ -87,4 +90,5 @@ TEST(math, Quaternion)
     hpr::quat q;
     hpr::vec3 np = hpr::rotate(hpr::vec3(0, 1, 0), {1, 0, 0}, hpr::pi() * 0.5);
     EXPECT_TRUE(hpr::all(hpr::equal(np, hpr::vec3(0, 0, 1))));
+    EXPECT_EQ(hpr::norm(hpr::quat(np)), 1);
 }

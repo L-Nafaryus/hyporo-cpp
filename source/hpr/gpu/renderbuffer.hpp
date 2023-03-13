@@ -45,7 +45,7 @@ namespace hpr::gpu
         void create()
         {
             glGenRenderbuffers(1, &p_index);
-            glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, p_index);
+            //glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, p_index);
         }
 
         void storage(int width, int height)

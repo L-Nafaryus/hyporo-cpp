@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../containers.hpp"
+#include <hpr/containers.hpp>
 
 #include <string>
 #include <filesystem>
@@ -54,6 +54,17 @@ namespace hpr::gpu
         {}
 
         inline
+        Texture(int width, int height) :
+            p_index {0},
+            p_filename {},
+            p_source {},
+            p_width {width},
+            p_height {height},
+            p_internalFormat {Format::RGBA},
+            p_imageFormat {Format::RGBA}
+        {}
+
+        inline
         Texture(const std::string& filename) :
             p_index {0},
             p_filename {filename},
@@ -73,29 +84,39 @@ namespace hpr::gpu
             return p_index;
         }
 
-        [[nodiscard]]
-        unsigned int width() const
+        int& width()
         {
             return p_width;
         }
 
         [[nodiscard]]
-        unsigned int height() const
+        int width() const
+        {
+            return p_width;
+        }
+
+        int& height()
         {
             return p_height;
         }
 
-        void active()
+        [[nodiscard]]
+        int height() const
+        {
+            return p_height;
+        }
+
+        void active() const
         {
             glActiveTexture(GL_TEXTURE0 + p_index);
         }
 
-        void bind()
+        void bind() const
         {
             glBindTexture(GL_TEXTURE_2D, p_index);
         }
 
-        void unbind()
+        void unbind() const
         {
             glBindTexture(GL_TEXTURE_2D, 0);
         }
@@ -171,8 +192,17 @@ namespace hpr::gpu
             unbind();
         }
 
+        void rescale()
+        {
+            bind();
+            glTexImage2D(GL_TEXTURE_2D, 0, (GLint)p_internalFormat, p_width, p_height, 0, (GLint)p_imageFormat, GL_UNSIGNED_BYTE, !p_source.empty() ? p_source.data() : nullptr);
+            unbind();
+        }
+
         void rescale(int width, int height)
         {
+            p_width = width;
+            p_height = height;
             bind();
             glTexImage2D(GL_TEXTURE_2D, 0, (GLint)p_internalFormat, p_width, p_height, 0, (GLint)p_imageFormat, GL_UNSIGNED_BYTE, !p_source.empty() ? p_source.data() : nullptr);
             unbind();

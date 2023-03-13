@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../math.hpp"
+#include <hpr/math.hpp>
 
 
 namespace hpr::gpu

@@ -1,4 +1,6 @@
-#include "../math.hpp"
+#pragma once
+
+#include <hpr/math.hpp>
 
 namespace hpr::geometry
 {

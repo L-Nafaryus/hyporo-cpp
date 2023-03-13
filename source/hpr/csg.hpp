@@ -1,12 +1,12 @@
 #pragma once
 
-#include "csg/shape.hpp"
-#include "csg/vertex.hpp"
-#include "csg/edge.hpp"
-#include "csg/wire.hpp"
-#include "csg/face.hpp"
-#include "csg/shell.hpp"
-#include "csg/solid.hpp"
-#include "csg/compound.hpp"
-#include "csg/geometry.hpp"
-#include "csg/surface.hpp"
+#include <hpr/csg/shape.hpp>
+#include <hpr/csg/vertex.hpp>
+#include <hpr/csg/edge.hpp>
+#include <hpr/csg/wire.hpp>
+#include <hpr/csg/face.hpp>
+#include <hpr/csg/shell.hpp>
+#include <hpr/csg/solid.hpp>
+#include <hpr/csg/compound.hpp>
+#include <hpr/csg/geometry.hpp>
+#include <hpr/csg/surface.hpp>

@@ -1,6 +1,7 @@
 #pragma once
 
-#include "../math/vector.hpp"
+#include <hpr/math/vector.hpp>
+
 #ifndef __gl_h_
 #include <glad/glad.h>
 #endif
@@ -44,7 +45,8 @@ namespace hpr::gpu
         virtual
         ~ColorBuffer() = default;
 
-        void mask(bool red, bool green, bool blue, bool alpha)
+        inline
+        void mask(bool red, bool green, bool blue, bool alpha) const
         {
             glColorMask(red, green, blue, alpha);
         }

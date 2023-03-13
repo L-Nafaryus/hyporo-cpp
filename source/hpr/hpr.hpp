@@ -1,49 +1,37 @@
 #pragma once
 
+#define HPR_VERSION_MAJOR 0
+#define HPR_VERSION_MINOR 10
+#define HPR_VERSION_PATCH 0
 
-namespace hpr
-{
-    /* Core */
-    // containers
-    // math
-    // io
-
-    /* Graphics */
-    namespace gpu
-    {
-        // gpu
-        // window_system
-    }
-
-    /* Mesh */
-    namespace mesh
-    {
-        // mesh
-    }
-
-    /* CSG */
-    namespace csg
-    {
-        // csg
-    }
-}
-
-#include "containers.hpp"
-#include "math.hpp"
-#include "io.hpp"
-
-#if WITH_GPU
-#include "gpu.hpp"
+#if HPR_WITH_CONTAINERS
+#include <hpr/containers.hpp>
 #endif
 
-#if WITH_WS
-#include "window_system.hpp"
+#if HPR_WITH_MATH
+#include <hpr/math.hpp>
 #endif
 
-#if WITH_MESH
-#include "mesh.hpp"
+#if HPR_WITH_IO
+#include <hpr/io.hpp>
 #endif
 
-#if WITH_CSG
-#include "csg.hpp"
+#if HPR_WITH_GPU
+#include <hpr/gpu.hpp>
+#endif
+
+#if HPR_WITH_MESH
+#include <hpr/mesh.hpp>
+#endif
+
+#if HPR_WITH_CSG
+#include <hpr/csg.hpp>
+#endif
+
+#if HPR_WITH_GEOMETRY
+#include <hpr/geometry.hpp>
+#endif
+
+#if HPR_WITH_PARALLEL
+#include <hpr/parallel.hpp>
 #endif

@@ -1,4 +1,3 @@
-include(${CMAKE_SOURCE_DIR}/cmake/tools/CPM.cmake)
 
 # branch: docking
 CPMAddPackage(
@@ -16,9 +15,9 @@ if(imgui_external_ADDED)
     find_package(PkgConfig REQUIRED)
     find_package(Freetype REQUIRED)
     find_package(OpenGL REQUIRED)
-    pkg_search_module(GLFW REQUIRED glfw3)
+    find_package(GLFW REQUIRED)
 
-    add_library(${EXTERNAL_PROJECT_NAME} STATIC
+    add_library(${EXTERNAL_PROJECT_NAME}
             ${imgui_external_SOURCE_DIR}/imgui.cpp
             ${imgui_external_SOURCE_DIR}/imgui_demo.cpp
             ${imgui_external_SOURCE_DIR}/imgui_draw.cpp
@@ -60,27 +59,38 @@ if(imgui_external_ADDED)
             EXCLUDE_FROM_ALL ON
             )
 
-    include(GNUInstallDirs)
+    if(IMGUI_INSTALL)
+        include(GNUInstallDirs)
 
-    install(
-            TARGETS ${EXTERNAL_PROJECT_NAME}
-            EXPORT ${EXTERNAL_PROJECT_NAME}Targets
-            DESTINATION ${CMAKE_INSTALL_LIBDIR}/${EXTERNAL_PROJECT_NAME}
-    )
+        install(
+                TARGETS ${EXTERNAL_PROJECT_NAME}
+                EXPORT ${EXTERNAL_PROJECT_NAME}Targets
+                RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+                COMPONENT runtime
+                LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+                COMPONENT devel
+                ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+                COMPONENT devel
+                INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+                COMPONENT devel
 
-    install(
-            EXPORT ${EXTERNAL_PROJECT_NAME}Targets
-            FILE ${EXTERNAL_PROJECT_NAME}Targets.cmake
-            NAMESPACE ${EXTERNAL_PROJECT_NAME}::
-            DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${EXTERNAL_PROJECT_NAME}
-    )
+        )
 
-    install(
-            DIRECTORY ${imgui_external_SOURCE_DIR}
-            DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${EXTERNAL_PROJECT_NAME}
-            COMPONENT devel
-            FILES_MATCHING
-            PATTERN "*.h"
-            PATTERN "*.hpp"
-    )
+        install(
+                EXPORT ${EXTERNAL_PROJECT_NAME}Targets
+                FILE ${EXTERNAL_PROJECT_NAME}Targets.cmake
+                NAMESPACE ${EXTERNAL_PROJECT_NAME}::
+                DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${EXTERNAL_PROJECT_NAME}
+                COMPONENT devel
+        )
+
+        install(
+                DIRECTORY ${imgui_external_SOURCE_DIR}/
+                DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${EXTERNAL_PROJECT_NAME}
+                COMPONENT devel
+                FILES_MATCHING
+                PATTERN "*.h"
+                PATTERN "*.hpp"
+        )
+    endif()
 endif()

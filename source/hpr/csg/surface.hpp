@@ -1,7 +1,7 @@
 #pragma once
 
-#include "geometry.hpp"
-#include "face.hpp"
+#include <hpr/csg/geometry.hpp>
+#include <hpr/csg/face.hpp>
 
 
 namespace hpr::csg

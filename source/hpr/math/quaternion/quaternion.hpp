@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../vector.hpp"
-
+#include <hpr/math/vector/vector.hpp>
+#include <hpr/exception.hpp>
 
 namespace hpr
 {
@@ -111,6 +111,28 @@ public:
     }
 
     inline
+    scalar& operator[](Size n)
+    {
+        if (n > 3)
+            throw hpr::OutOfRange();
+        if (n == 0)
+            return p_real;
+        else
+            return p_imag[n - 1];
+    }
+
+    inline
+    scalar operator[](Size n) const
+    {
+        if (n > 3)
+            throw hpr::OutOfRange();
+        if (n == 0)
+            return p_real;
+        else
+            return p_imag[n - 1];
+    }
+
+    inline
     void operator+=(const Quaternion& q)
     {
         p_real += q.p_real;
@@ -192,8 +214,10 @@ Quaternion operator-(const Quaternion& lhs, const Quaternion& rhs)
 inline
 Quaternion operator*(const Quaternion& lhs, const Quaternion& rhs)
 {
-    return {lhs.real() * rhs.real() - dot(lhs.imag(), rhs.imag()),
-        lhs.real() * rhs.imag() + rhs.real() * lhs.imag() + cross(lhs.imag(), rhs.imag())};
+    return {
+        lhs.real() * rhs.real() - dot(lhs.imag(), rhs.imag()),
+        lhs.real() * rhs.imag() + rhs.real() * lhs.imag() + cross(lhs.imag(), rhs.imag())
+    };
 }
 
 inline
@@ -251,6 +275,14 @@ vec3 rotate(const vec3& point, const vec3& axis, const scalar& angle)
     Quaternion q {normalize(axis), angle};
     return (q * p * inverse(q)).imag();
 }
+
+void decompose(const Quaternion& q, vec3& axis, scalar& angle)
+{
+    const scalar qnorm = norm(q.imag());
+    axis = q.imag() / qnorm;
+    angle = 2 * atan2(qnorm, q.real());
+}
+
 
 // Aliases
 

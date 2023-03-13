@@ -1,7 +1,7 @@
 #pragma once
 
-#include "shape.hpp"
-#include "shell.hpp"
+#include <hpr/csg/shape.hpp>
+#include <hpr/csg/shell.hpp>
 
 
 namespace hpr::csg

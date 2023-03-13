@@ -1,8 +1,8 @@
 #pragma once
 
-#include "../containers/array.hpp"
-#include "../math/scalar/scalar.hpp"
-#include "../math/vector.hpp"
+#include <hpr/containers/array.hpp>
+#include <hpr/math/scalar/scalar.hpp>
+#include <hpr/math/vector.hpp>
 
 
 

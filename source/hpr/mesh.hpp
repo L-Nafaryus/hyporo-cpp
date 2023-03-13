@@ -1,3 +1,3 @@
 #pragma once
 
-#include "mesh/mesh.hpp"
+#include <hpr/mesh/mesh.hpp>

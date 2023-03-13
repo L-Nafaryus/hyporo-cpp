@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../containers.hpp"
-#include "../math.hpp"
+#include <hpr/containers.hpp>
+#include <hpr/math.hpp>
 
 
 namespace hpr::geometry

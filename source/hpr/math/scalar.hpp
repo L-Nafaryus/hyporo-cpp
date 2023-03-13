@@ -1,3 +1,3 @@
 #pragma once
 
-#include "scalar/scalar.hpp"
+#include <hpr/math/scalar/scalar.hpp>

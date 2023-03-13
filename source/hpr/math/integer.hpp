@@ -1,4 +1,4 @@
 #pragma once
 
-#include "integer/integer.hpp"
-#include "integer/size.hpp"
+#include <hpr/math/integer/integer.hpp>
+#include <hpr/math/integer/size.hpp>

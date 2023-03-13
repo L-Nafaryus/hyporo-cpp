@@ -1,6 +1,6 @@
 #pragma once
 
-#include "shape.hpp"
+#include <hpr/csg/shape.hpp>
 
 
 namespace hpr::csg

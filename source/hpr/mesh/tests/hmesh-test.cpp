@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "../mesh.hpp"
+#include <hpr/mesh/mesh.hpp>
 
 TEST(hmeshTest, Mesh)
 {

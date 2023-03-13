@@ -1,11 +1,12 @@
 #include <gtest/gtest.h>
-#include "../../csg.hpp"
+#include <hpr/csg.hpp>
+
 
 TEST(csgTest, Shape)
 {
     using namespace hpr;
     double radius = 1.;
-    double volume = 4. / 3. * PI;
+    double volume = 4. / 3. * pi();
     auto sphere = csg::sphere({0, 0, 0}, radius);
     EXPECT_TRUE(equal(sphere.volume(), volume, 1e-6));
     auto box = csg::box({0, 0, 0}, 1, 1, 1);

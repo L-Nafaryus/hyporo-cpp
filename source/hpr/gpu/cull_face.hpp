@@ -12,7 +12,9 @@ namespace hpr::gpu
 class CullFace
 {
 
-    enum class Mode
+public:
+
+    enum Mode
     {
         Front = GL_FRONT,
         Back = GL_BACK,
@@ -37,7 +39,9 @@ public:
     CullFace(Mode mode) :
         p_binded {false},
         p_mode {mode}
-    {}
+    {
+        set(mode);
+    }
 
     virtual
     ~CullFace() = default;

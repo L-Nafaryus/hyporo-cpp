@@ -1,8 +1,10 @@
-cmake-wsl-build-debug
-cmake-build-debug/
+cmake-build*/
+build*/
+
 .idea/
-build/
+
 .ccls-cache/
 compile_commands.json
 .cache/
+
 temp/

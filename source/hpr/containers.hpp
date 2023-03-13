@@ -1,3 +1,3 @@
 #pragma once
 
-#include "containers/array.hpp"
+#include <hpr/containers/array.hpp>

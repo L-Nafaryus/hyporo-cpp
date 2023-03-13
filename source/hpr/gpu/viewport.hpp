@@ -1,6 +1,7 @@
 #pragma once
 
-#include "../math/vector.hpp"
+#include <hpr/math/vector.hpp>
+
 #ifndef __gl_h_
 #include <glad/glad.h>
 #endif
@@ -33,6 +34,16 @@ public:
 
     virtual
     ~Viewport() = default;
+
+    vec2& pos()
+    {
+        return p_pos;
+    }
+
+    vec2& size()
+    {
+        return p_size;
+    }
 
     inline
     void set()

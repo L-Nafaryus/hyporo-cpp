@@ -1,4 +1,4 @@
-#include "shape.hpp"
+#include <hpr/csg/shape.hpp>
 
 
 bool std::less<hpr::csg::Shape>::operator()(const hpr::csg::Shape& s1, const hpr::csg::Shape& s2) const

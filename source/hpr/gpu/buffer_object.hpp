@@ -1,6 +1,7 @@
 #pragma once
 
-#include "../containers.hpp"
+#include <hpr/containers.hpp>
+
 
 #include <string>
 #ifndef __gl_h_
@@ -16,11 +17,11 @@ class BufferObject
 
 public:
 
-    enum class Type
+    enum Type
     {
-        Vertex = 0x8892, //GL_ARRAY_BUFFER,
-        Index = 0x8893, //GL_ELEMENT_ARRAY_BUFFER,
-        Uniform = 0x8A11, //GL_UNIFORM_BUFFER,
+        Vertex = 0x8892, // GL_ARRAY_BUFFER,
+        Index = 0x8893, // GL_ELEMENT_ARRAY_BUFFER,
+        Uniform = 0x8A11, // GL_UNIFORM_BUFFER,
         Unknown = -1
     };
 
@@ -29,7 +30,7 @@ protected:
     Type p_type;
     unsigned int p_index;
     int p_size;
-    int p_offset;
+    unsigned int p_offset;
     bool p_binded;
 
 public:
@@ -79,9 +80,17 @@ public:
         return p_offset;
     }
 
-    void bind() ;
+    void bind()
+    {
+        glBindBuffer((GLenum)p_type, p_index);
+        p_binded = true;
+    }
 
-    void unbind();
+    void unbind()
+    {
+        glBindBuffer((GLenum)p_type, 0);
+        p_binded = false;
+    }
 
     [[nodiscard]]
     bool binded() const
@@ -93,7 +102,7 @@ public:
     void create(const darray<T>& data, unsigned int offset = 0)
     {
         if (p_type == Type::Unknown)
-            std::runtime_error("Unknown buffer type");
+            throw std::runtime_error("Unknown buffer type");
 
         unsigned int drawType;
 
@@ -104,24 +113,34 @@ public:
 
         glGenBuffers(1, &p_index);
         bind();
-        glBufferData((GLenum)p_type, sizeof(T) * data.size(), data.data(), drawType);
+        glBufferData(static_cast<GLenum>(p_type), sizeof(T) * data.size(), data.data(), drawType);
         unbind();
 
         p_offset = offset;
+        p_size = data.size();
     }
 
     template <typename T>
     void edit(const darray<T>& data, unsigned int offset = 0)
     {
         if (p_type == Type::Unknown)
-            std::runtime_error("Unknown buffer type");
+            throw std::runtime_error("Unknown buffer type");
 
         bind();
         glBufferSubData(p_type, offset, sizeof(T) * data.size(), data.data());
         unbind();
+
+        p_offset = offset;
+        p_size = data.size();
     }
 
-    void destroy();
+    void destroy()
+    {
+        if (p_type == Type::Unknown)
+            throw std::runtime_error("Unknown buffer type");
+
+        glDeleteBuffers(1, &p_index);
+    }
 
     [[nodiscard]]
     inline

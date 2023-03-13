@@ -1,4 +1,5 @@
 #pragma once
 
-#include "array/dynamic_array.hpp"
-#include "array/static_array.hpp"
+#include <hpr/containers/array/iterator.hpp>
+#include <hpr/containers/array/dynamic_array.hpp>
+#include <hpr/containers/array/static_array.hpp>

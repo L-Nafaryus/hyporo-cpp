@@ -1,3 +1,8 @@
+cmake_minimum_required (VERSION 3.16)
+
+include(${CMAKE_SOURCE_DIR}/cmake/external/imgui.cmake)
+include(${CMAKE_SOURCE_DIR}/cmake/external/implot.cmake)
+include(${CMAKE_SOURCE_DIR}/cmake/external/glm.cmake)
 
 project(
     hyporo-creator
@@ -7,55 +12,36 @@ project(
 
 # Compiler options
 set(CMAKE_CXX_STANDARD 20)
-#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
 
 # Project options
-include(GNUInstallDirs)
+#include(GNUInstallDirs)
+
+#include (InstallRequiredSystemLibraries)
+
+if (MINGW)
+    list(APPEND MINGW_SYSTEM_RUNTIME_LIBS
+        "/mingw64/bin/libgcc_s_seh-1.dll"
+        "/mingw64/bin/libwinpthread-1.dll"
+        "/mingw64/bin/libstdc++-6.dll"
+    )
+endif()
 
 
-#add_executable(${PROJECT_NAME}
-#    creator.cpp
-#)
 
-include(${CMAKE_SOURCE_DIR}/cmake/external/imgui.cmake)
-#message(STATUS "project name: ${PROJECT_NAME}")
-#target_link_libraries(${PROJECT_NAME}
-#    hpr::hpr
-#    imgui
-#)
 
-#target_include_directories(${PROJECT_NAME}
-#    PRIVATE
-#    ../
-#)
+#find_package(hpr REQUIRED)
 
-#set(CMAKE_CXX_STANDARD 20)
-#add_executable(testi
-#    test.cpp
-#)
-
-#target_include_directories(testi
-#    PRIVATE
-#    ../
-#)
-
-#target_link_libraries(testi
-#    hpr::hpr
-#    imgui
-#)
-set(CMAKE_CXX_STANDARD 20)
 
 add_executable(hyporo-creator
-        test2.cpp
-        )
-
-target_include_directories(hyporo-creator
-        PRIVATE
-        ../
-        )
+    test2.cpp
+)
 
 target_link_libraries(hyporo-creator
-        hpr::gpu
-        hpr::window-system
-        imgui
-        )
+    hpr::gpu
+    imgui::imgui
+    implot::implot
+    glm::glm
+)
+
+target_link_libraries(hyporo-creator -static gcc stdc++ winpthread -dynamic)
+

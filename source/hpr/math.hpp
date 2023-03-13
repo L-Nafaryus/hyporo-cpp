@@ -1,5 +1,6 @@
 #pragma once
 
-#include "math/scalar.hpp"
-#include "math/vector.hpp"
-#include "math/matrix.hpp"
+#include <hpr/math/scalar.hpp>
+#include <hpr/math/vector.hpp>
+#include <hpr/math/matrix.hpp>
+#include <hpr/math/quaternion.hpp>

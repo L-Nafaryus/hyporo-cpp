@@ -1,5 +1,5 @@
 #pragma once
 
-#include "geometry/polytope.hpp"
-#include "geometry/triangle.hpp"
-#include "geometry/tetrahedron.hpp"
+#include <hpr/geometry/polytope.hpp>
+#include <hpr/geometry/triangle.hpp>
+#include <hpr/geometry/tetrahedron.hpp>

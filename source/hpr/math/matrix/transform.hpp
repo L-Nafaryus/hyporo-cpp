@@ -1,6 +1,8 @@
 #pragma once
 
-#include "../matrix.hpp"
+#include <hpr/math/matrix/matrix.hpp>
+#include <hpr/math/vector/vector.hpp>
+
 
 
 namespace hpr
@@ -18,23 +20,12 @@ Matrix<T, 4, 4> translate(const Matrix<T, 4, 4>& ms, const Vector<T, 3>& vs)
 
 template <IsReal T>
 inline
-Vector<T, 3> translate(const Vector<T, 3>& vs1, const Vector<T, 3>& vs2)
-{
-    Matrix<T, 4, 4> res = Matrix<T, 4, 4>::identity();
-    res.row(3, Vector<T, 4>(vs1, 0.));
-    res = translate(res, vs2);
-
-    return Vector<T, 3>(res.row(3));
-}
-
-template <IsReal T>
-inline
 Matrix<T, 4, 4> rotate(const Matrix<T, 4, 4>& ms, const Vector<T, 3>& vs, T angle)
 {
     const T cosv = cos(angle);
     const T sinv = sin(angle);
     Vector<T, 3> axis {normalize(vs)};
-    Vector<T, 3> temp {(1. - cosv) * axis};
+    Vector<T, 3> temp {(static_cast<T>(1) - cosv) * axis};
 
     Matrix<T, 4, 4> rot;
     rot(0, 0) = cosv + temp[0] * axis[0];
@@ -56,15 +47,12 @@ Matrix<T, 4, 4> rotate(const Matrix<T, 4, 4>& ms, const Vector<T, 3>& vs, T angl
     return res;
 }
 
+
 template <IsReal T>
 inline
-Vector<T, 3> rotate(const Vector<T, 3>& vs1, const Vector<T, 3>& vs2, T angle)
+Matrix<T, 4, 4> rotate(const Matrix<T, 4, 4>& ms, const Quaternion& q)
 {
-    Matrix<T, 4, 4> res = Matrix<T, 4, 4>::identity();
-    res.row(3, Vector<T, 4>(vs1, 0.));
-    res = rotate(res, vs2, angle);
-
-    return Vector<T, 3>(res.row(3));
+    return ms * Matrix<T, 4, 4>(q);
 }
 
 template <IsReal T>
@@ -83,17 +71,18 @@ Matrix<T, 4, 4> scale(const Matrix<T, 4, 4>& ms, const Vector<T, 3>& vs)
 
 template <typename T>
 inline
-Matrix<T, 4, 4> lookAt(const Matrix<T, 4, 4>& ms, const Vector<T, 3>& eye, const Vector<T, 3>& center, const Vector<T, 3>& up)
+Matrix<T, 4, 4> lookAt(const Vector<T, 3>& eye, const Vector<T, 3>& center, const Vector<T, 3>& up)
 {
     const Vector<T, 3> forward {normalize(center - eye)};
-    const Vector<T, 3> left {normalize(cross(up, forward))};
-    const Vector<T, 3> nup {cross(forward, left)};
+    const Vector<T, 3> right {normalize(cross(forward, up))};
+    const Vector<T, 3> nup {cross(right, forward)};
+    const Vector<T, 3> translation {dot(right, eye), dot(nup, eye), -dot(forward, eye)};
 
-    Matrix<T, 4, 4> res;
-    res.col(0, Vector<T, 4>(left, 0));
-    res.col(1, Vector<T, 4>(nup, 0));
-    res.col(2, Vector<T, 4>(forward, 0));
-    res.row(3, -Vector<T, 4>(dot(left, eye), dot(nup, eye), dot(forward, eye), -1.));
+    Matrix<T, 4, 4> res = Matrix<T, 4, 4>::identity();
+    res.row(0, Vector<T, 4>(right, 0));
+    res.row(1, Vector<T, 4>(nup, 0));
+    res.row(2, Vector<T, 4>(-forward, 0));
+    res.col(3, Vector<T, 4>(-translation, static_cast<T>(1)));
 
     return res;
 }

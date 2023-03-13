@@ -1,28 +1,33 @@
 cmake_minimum_required (VERSION 3.16)
 
+#
+set(HPR_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
+set(HPR_EXTERNAL_PATH "${HPR_MODULE_PATH}/external")
+set(HPR_TOOLCHAINS_PATH "${HPR_MODULE_PATH}/toolchains")
+
+set(HPR_SOURCE_DIR "${CMAKE_CURRENT_LIST_DIR}/source")
+
+# toolchain
+#if (MINGW)
+#    set(CMAKE_TOOLCHAIN_FILE "${HPR_TOOLCHAINS_PATH}/mingw-gcc.cmake")
+#else()
+#    set(CMAKE_TOOLCHAIN_FILE "${HPR_TOOLCHAINS_PATH}/linux-gcc.cmake")
+#endif()
+
 # Extract project version from source
-file(STRINGS "source/hpr/core/common.hpp"
-        hpr_version_defines REGEX "#define HPR_VERSION_(MAJOR|MINOR|PATCH) ")
+include(${HPR_MODULE_PATH}/hpr-macros.cmake)
 
-foreach(ver ${hpr_version_defines})
-    if(ver MATCHES [[#define HPR_VERSION_(MAJOR|MINOR|PATCH) +([^ ]+)$]])
-        set(HPR_VERSION_${CMAKE_MATCH_1} "${CMAKE_MATCH_2}")
-    endif()
-endforeach()
-
-if(HPR_VERSION_PATCH MATCHES [[\.([a-zA-Z0-9]+)$]])
-    set(hpr_VERSION_TYPE "${CMAKE_MATCH_1}")
-endif()
-
-string(REGEX MATCH "^[0-9]+" HPR_VERSION_PATCH "${HPR_VERSION_PATCH}")
-set(HPR_PROJECT_VERSION "${HPR_VERSION_MAJOR}.${HPR_VERSION_MINOR}.${HPR_VERSION_PATCH}")
+hpr_parse_version("${HPR_SOURCE_DIR}/hpr/hpr.hpp" "#define HPR_VERSION_(MAJOR|MINOR|PATCH)")
 
 # Main project
 project(
     hpr
-    VERSION "${HPR_PROJECT_VERSION}"
+    VERSION "${HPR_VERSION}"
     LANGUAGES CXX
 )
+
+# Compiler settings
+set(CMAKE_CXX_STANDARD 20)
 
 # Detect how project is used
 if(CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR)
@@ -35,133 +40,124 @@ if(CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR)
         message(AUTHOR_WARNING ${lines})
     endif()
 
-    set(HPR_MASTER_PROJECT ON)
-    set(CMAKE_CXX_STANDARD 20)
-
-    message(STATUS ${CMAKE_SOURCE_DIR})
+    set(HPR_IS_TOP_LEVEL ON)
 else()
-    set(HPR_MASTER_PROJECT OFF)
+    set(HPR_IS_TOP_LEVEL OFF)
 endif()
 
+# Project options
+option(HPR_INSTALL "Install hpr files?" ${HPR_IS_TOP_LEVEL})
+option(HPR_TEST "Build hpr tests?" ${HPR_IS_TOP_LEVEL})
 
-
-# Standard includes
+# Installation settings
 include(GNUInstallDirs)
-include(CPack)
 
-# Options
-option(HPR_INSTALL "Install hpr files?" ${HPR_MASTER_PROJECT})
-option(HPR_TEST "Build hpr tests?" ${HPR_MASTER_PROJECT})
+set(HPR_INSTALL_INTERFACE "$<INSTALL_INTERFACE:include/${PROJECT_NAME}") # ! '>' not included
+
+# Package manager
+include(${HPR_MODULE_PATH}/tools/CPM.cmake)
 
 # Testing
 if(HPR_TEST)
     enable_testing()
 
-    option(INSTALL_GMOCK "" OFF)
-    option(INSTALL_GTEST "" OFF)
-
-    include(${CMAKE_SOURCE_DIR}/cmake/external/googletest.cmake)
+    include("${HPR_EXTERNAL_PATH}/googletest.cmake")
     include(GoogleTest)
 endif()
 
-# Modules
-option(WITH_CONTAINERS "" ON)
-option(WITH_MATH "" ON)
-option(WITH_IO "" ON)
-option(WITH_MESH "" ON)
-option(WITH_CSG "" ON)
-    option(USE_SYSTEM_OCCT "" ON)
-option(WITH_GPU "" ON)
-option(WITH_WINDOW_SYSTEM "" ON)
+# Uninstall target
+if (NOT TARGET uninstall)
+    configure_file(
+        "${CMAKE_CURRENT_LIST_DIR}/cmake/templates/cmake_uninstall.cmake.in" cmake_uninstall.cmake
+        IMMEDIATE @ONLY
+    )
 
-set_property(GLOBAL PROPERTY HPR_MODULES "")
-macro(add_module MODULE)
-    set_property(GLOBAL APPEND PROPERTY HPR_MODULES "${MODULE}")
-endmacro()
+    add_custom_target(uninstall "${CMAKE_COMMAND}" -P "${PROJECT_BINARY_DIR}/cmake_uninstall.cmake")
+endif()
+
+
+# Modules
+option(HPR_WITH_CONTAINERS "" ON)
+option(HPR_WITH_MATH "" ON)
+option(HPR_WITH_IO "" ON)
+option(HPR_WITH_MESH "" ON)
+option(HPR_WITH_CSG "" ON)
+option(HPR_WITH_GPU "" ON)
+option(HPR_WITH_PARALLEL "" ON)
+
+include_directories(${HPR_SOURCE_DIR})
 
 add_subdirectory(source/hpr)
 
-get_property(hpr_modules GLOBAL PROPERTY HPR_MODULES)
-foreach(module ${hpr_modules})
-    get_target_property(module_type ${module} TYPE)
-    if(module_type STREQUAL "INTERFACE_LIBRARY")
-        list(APPEND HPR_INTERFACE_LIBS "${PROJECT_NAME}::${module}")
-    else()
-        list(APPEND HPR_PUBLIC_LIBS "${PROJECT_NAME}::${module}")
-    endif()
-    set(hpr_modules_summary "${hpr_modules_summary} ${module}")
-endforeach()
+hpr_collect_modules()
 
 # Main library
-add_library(hpr SHARED
-    source/hpr/hpr.cpp)
+add_library(hpr SHARED source/hpr/hpr.cpp)
 add_library(hpr::hpr ALIAS hpr)
 
 target_sources(hpr
-    INTERFACE
-        "$<BUILD_INTERFACE:source/hpr/hpr.hpp>"
-        "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>"
+    INTERFACE "$<BUILD_INTERFACE:source/hpr/hpr.hpp>" "${HPR_INSTALL_INTERFACE}>"
 )
 
 target_link_libraries(hpr
-    INTERFACE
-        ${HPR_INTERFACE_LIBS}
-    PUBLIC
-        ${HPR_PUBLIC_LIBS}
+    INTERFACE ${HPR_INTERFACE_LIBS}
+    PUBLIC ${HPR_PUBLIC_LIBS}
 )
 
-include(CMakePackageConfigHelpers)
 
-configure_package_config_file(
-    "${PROJECT_SOURCE_DIR}/cmake/${PROJECT_NAME}Config.cmake.in"
-    "${PROJECT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
-    INSTALL_DESTINATION
-    ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}-${PROJECT_VERSION}
-)
+# Installation
+if (HPR_INSTALL)
+    include(CMakePackageConfigHelpers)
 
-write_basic_package_version_file(
-    "${PROJECT_NAME}ConfigVersion.cmake"
-    VERSION ${PROJECT_VERSION}
-    COMPATIBILITY SameMajorVersion
-)
+    configure_package_config_file(
+        "${HPR_MODULE_PATH}/templates/Config.cmake.in" "${PROJECT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
+        INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
+    )
 
-install(FILES
-    ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake
-    ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake
-    DESTINATION
-    ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}-${PROJECT_VERSION}
-)
-install(
+    write_basic_package_version_file(
+        "${PROJECT_NAME}ConfigVersion.cmake"
+        VERSION ${PROJECT_VERSION} COMPATIBILITY SameMajorVersion
+    )
+
+    install(FILES
+        ${PROJECT_BINARY_DIR}/${PROJECT_NAME}Config.cmake
+        ${PROJECT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake
+        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME} COMPONENT devel
+    )
+
+    install(
         TARGETS ${PROJECT_NAME}
         EXPORT ${PROJECT_NAME}Targets
-        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}/${PROJECT_NAME}
-        NAMELINK_SKIP
-        INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-)
-install(
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT runtime
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT devel
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT devel
+        INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME} COMPONENT devel
+    )
+
+    install(
         EXPORT ${PROJECT_NAME}Targets
-        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${CMAKE_PROJECT_NAME}-${HPR_PROJECT_VERSION}
+        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME} COMPONENT devel
         NAMESPACE ${CMAKE_PROJECT_NAME}::
-)
-install(
-        TARGETS ${PROJECT_NAME}
-        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}/${PROJECT_NAME}
-        NAMELINK_ONLY
-        INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-)
+    )
+    install(
+        FILES source/${PROJECT_NAME}/${PROJECT_NAME}.hpp
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME} COMPONENT devel
+    )
+
+    set(CPACK_PACKAGE_NAME "${PROJECT_NAME}")
+    set(CPACK_PACKAGE_VERSION "${HPR_VERSION}")
+
+    include(CPack)
+    cpack_add_component(devel DISPLAY_NAME "Development")
+    cpack_add_component(runtime DISPLAY_NAME "Runtime libraries")
+endif()
 
 # Project summary
-set(summary
-    "Summary:\n"
-    "Version: ${HPR_PROJECT_VERSION}\n"
-    "Master: ${HPR_MASTER_PROJECT}\n"
-    "Modules: ${hpr_modules_summary}"
-)
-message(STATUS ${summary})
+hpr_print_summary()
 
 # Documentation
 #add_subdirectory(docs)
 
 # Additional applications
-add_subdirectory(source/applications)
 add_subdirectory(source/creator)
+add_subdirectory(source/applications)

@@ -1,17 +1,17 @@
 #pragma once
 
-#include "../containers/array.hpp"
 #include <iostream>
 #include <memory>
 #include <sstream>
 #include <vector>
+#include <array>
+#include <source_location>
+#include <fstream>
+#include <filesystem>
 
-namespace hpr
+namespace hpr::logging
 {
 
-
-namespace logging
-{
     enum Severity
     {
         Emergency,
@@ -31,27 +31,33 @@ namespace logging
     protected:
 
         Severity p_severity;
-        std::string_view p_message;
+        std::string p_message;
 
     public:
 
         Sink() :
-            p_severity {Emergency},
-            p_message {}
+                p_severity {Emergency},
+                p_message {}
         {}
 
         Sink(Severity severity) :
-            p_severity {severity},
-            p_message {}
+                p_severity {severity},
+                p_message {}
         {}
 
-        void addMessage(const std::string_view& message)
+        void addMessage(const std::string& message)
         {
             p_message = message;
         }
 
         virtual
         void flush() = 0;
+        /*{
+            p_message.clear();
+        }*/
+
+        virtual
+        Sink* clone() const = 0;
 
 
         virtual
@@ -65,210 +71,484 @@ namespace logging
     public:
 
         StandardOutput() :
-            Sink()
+                Sink()
         {}
 
         explicit
         StandardOutput(Severity severity) :
-            Sink(severity)
+                Sink(severity)
         {}
 
         void flush() override
         {
-            if (p_severity < Error)
-                std::cerr << p_message << "\n";
-            if (p_severity < Debug)
-                std::cout << p_message << "\n";
+            if (p_severity <= Error)
+                std::cerr << p_message;// << "\n";
+            if (p_severity > Error && p_severity <= Debug)
+                std::cout << p_message;// << "\n";
             std::cout.flush();
+            //p_message.clear();
         }
 
+        StandardOutput* clone() const override
+        {
+            return new StandardOutput(*this);
+        }
 
         ~StandardOutput() override = default;
 
     };
 
-    enum class LoggerState
+    class FileOutput : public Sink
     {
-        Endline,
-        Flush,
-        Exception,
-        Exit
+
+    protected:
+
+        std::string p_filename;
+        static std::mutex mutex;
+    public:
+
+        FileOutput() = delete;
+
+        FileOutput(Severity severity, const std::string& filename) :
+                Sink {severity},
+                p_filename {filename}
+        {}
+
+        void flush() override
+        {
+            auto path = std::filesystem::canonical(std::filesystem::path(p_filename));
+            std::ofstream sf {path, std::ios::app};
+
+            if (!sf.is_open())
+                throw std::runtime_error("Failed to open file");
+            else
+            {
+                std::lock_guard<std::mutex> lock(mutex);
+                sf << p_message;
+            }
+        }
+
+        FileOutput* clone() const override
+        {
+            return new FileOutput(*this);
+        }
+
+        ~FileOutput() override = default;
+
     };
+
+    std::mutex FileOutput::mutex;
+
+    class DumbassOutput : public Sink
+    {
+
+    public:
+
+        DumbassOutput() :
+                Sink()
+        {}
+
+        explicit
+        DumbassOutput(Severity severity) :
+                Sink(severity)
+        {}
+
+        void flush() override
+        {
+            std::cout << "BLUAARUARA";// << "\n";
+            std::cout.flush();
+            p_message.clear();
+        }
+
+        DumbassOutput* clone() const override
+        {
+            return new DumbassOutput(*this);
+        }
+
+        ~DumbassOutput() override = default;
+
+    };
+
 
     class Logger
     {
-        static Logger g_instance;
-        static darray<Sink*> g_sinks;
+
+    public:
+
+        enum class State
+        {
+            Endline,
+            Flush,
+            Exception,
+            Exit
+        };
+
+    private:
+
+        static std::mutex mutex;
 
     protected:
 
         Severity p_severity;
         std::ostringstream p_stream;
         int p_exitcode;
-        sarray<std::string, 8> p_levelNames;
-        darray<std::string> p_buffer;
-
-    protected:
-
-        Logger() :
-            p_severity {Emergency},
-            p_stream {},
-            p_exitcode {-1},
-            p_levelNames { "Emergency", "Alert", "Critical", "Error", "Warning", "Notice", "Info", "Debug"}
-        {}
-
-        static Logger& instance()
-        {
-            return g_instance;
-        }
+        std::array<std::string, 8> p_levelNames;
+        std::vector<Sink*> p_sinks;
+        std::source_location p_location;
+        bool p_isGlobal;
+        std::string p_format;
 
     public:
 
-        static void destroy()
+        Logger() :
+                p_severity {Emergency},
+                p_stream {"", std::ios::out | std::ios::ate },
+                p_exitcode {-1},
+                p_levelNames { "Emergency", "Alert", "Critical", "Error", "Warning", "Notice", "Info", "Debug"},
+                p_sinks {},
+                p_location {},
+                p_isGlobal {false},
+                p_format {"{levelname}({location}): {message}"}
+        {}
+
+        explicit
+        Logger(Severity severity) :
+                p_severity {severity},
+                p_stream {},
+                p_exitcode {-1},
+                p_levelNames { "Emergency", "Alert", "Critical", "Error", "Warning", "Notice", "Info", "Debug"},
+                p_sinks {},
+                p_location {},
+                p_isGlobal {false},
+                p_format {"{levelname}: {filename}:{location}: {message}"}
+        {}
+
+        Logger(const Logger& logger)
         {
-            for (Sink* sink : g_sinks)
+            copy(*this, logger);
+        }
+
+        Logger& operator=(const Logger& logger)
+        {
+            copy(*this, logger);
+            return *this;
+        }
+
+        virtual
+        ~Logger()
+        {
+            for (auto& sink : p_sinks)
                 delete sink;
-            g_sinks.clear();
         }
 
-        static darray<Sink*>& sinks()
+        inline
+        void severity(Severity severity)
         {
-            return g_sinks;
+            p_severity = severity;
         }
 
-        static void addSink(Sink* sink)
+        inline
+        Severity severity()
+        {
+            return p_severity;
+        }
+
+        inline
+        std::string stream()
+        {
+            return p_stream.str();
+        }
+
+        inline
+        void levelname(Severity severity, const std::string& name)
+        {
+            p_levelNames[severity] = name;
+        }
+
+        inline
+        std::string levelname(Severity severity)
+        {
+            return p_levelNames[severity];
+        }
+
+        inline
+        void location(const std::source_location& location)
+        {
+            p_location = location;
+        }
+
+        inline
+        std::source_location location()
+        {
+            return p_location;
+        }
+
+        inline
+        void format(const std::string& format)
+        {
+            p_format = format;
+        }
+
+        inline
+        std::string format()
+        {
+            return p_format;
+        }
+
+        inline
+        const std::vector<Sink*>& sinks()
+        {
+            return p_sinks;
+        }
+
+        inline
+        void addSink(Sink* sink)
         {
             if (sink != nullptr)
-                g_sinks.push(sink);
+            {
+                p_sinks.push_back(sink->clone());
+                //p_sinks.push_back(new T());
+                //*p_sinks.back() = *sink;
+                //p_sinks.emplace_back();
+                //p_sinks.back() = reinterpret_cast<Sink *>(&sink);
+            }
         }
 
-        static Severity severity()
+        inline
+        void removeSink(std::size_t n)
         {
-            return g_instance.p_severity;
+            p_sinks.erase(p_sinks.begin() + n);
         }
 
-        static void severity(Severity severity)
+        inline
+        Sink* defaultSink()
         {
-            g_instance.p_severity = severity;
+            return new StandardOutput(p_severity);
         }
 
-        // begin functions
-        friend
-        std::ostringstream&& log(Severity severity);
+        std::string formatMessage(const std::string& message)
+        {
+            auto replace = [](std::string& lhs, const std::string& rep, const std::string& replacement)
+            {
+                std::size_t index = 0;
+                while ((index = lhs.find(rep, index)) != std::string::npos)
+                {
+                    lhs.replace(index, rep.length(), replacement);
+                    index += replacement.length();
+                }
+                return lhs;
+            };
+
+            std::string target = p_format;
+            target = replace(target, "{levelname}", p_levelNames[p_severity]);
+            target = replace(target, "{location}", std::to_string(p_location.line()));
+            target = replace(target, "{function}", p_location.function_name());
+            target = replace(target, "{filename}", p_location.file_name());
+            target = replace(target, "{message}", message);
+
+            return target;
+        }
+
+        template <class T>
+        Logger& operator<<(const T& message)
+        {
+            if constexpr (std::is_same_v<T, State>)
+            {
+                //std::lock_guard<std::mutex> lock(mutex);
+
+                if (message >= State::Endline)
+                {
+                    p_stream << "\n";
+                }
+
+                if (message >= State::Flush)
+                {
+                    std::string formattedMessage = formatMessage(p_stream.str());
+
+                    if (p_sinks.empty())
+                    {
+                        std::cout << "default sink" << std::endl;
+                        Sink* sink = defaultSink();
+                        sink->addMessage(formattedMessage);
+                        sink->flush();
+                        delete sink;
+                    }
+                    else
+                    {
+                        std::cout << "local sinks" << std::endl;
+                        for (auto& sink : p_sinks)
+                        {
+                            if (sink != nullptr)
+                            {
+                                sink->addMessage(formattedMessage);
+                                sink->flush();
+                            }
+                        }
+                    }
+
+                    p_stream.flush();
+                }
+
+                if (message == State::Exception)
+                {
+                    throw std::runtime_error(p_stream.str());
+                }
+
+                if (message == State::Exit)
+                {
+                    std::exit(p_exitcode);
+                }
+
+            }
+            else
+            {
+                std::lock_guard<std::mutex> lock(mutex);
+                p_stream << message;
+            }
+            return *this;
+        }
 
 
+        friend inline
+        Logger log(Severity severity, std::source_location location);
 
-        // end functions
-        friend
-        LoggerState endl();
+    public:
 
-        friend
-        LoggerState flush();
+        static void copy(Logger& lhs, const Logger& rhs)
+        {
+            lhs.p_severity = rhs.p_severity;
 
-        friend
-        LoggerState exception();
+            lhs.p_stream.flush();
+            lhs.p_stream << rhs.p_stream.str();
 
-        friend
-        LoggerState exit(int code);
+            lhs.p_exitcode = rhs.p_exitcode;
+            lhs.p_levelNames = rhs.p_levelNames;
+            lhs.p_isGlobal = false;
+            lhs.p_location = rhs.p_location;
+            lhs.p_format = rhs.p_format;
 
-        //
-        friend
-        std::ostream& operator<<(std::ostream& stream, const LoggerState& state);
+            if (!rhs.p_sinks.empty())
+            {
+                lhs.p_sinks.reserve(rhs.p_sinks.size());
+                for (const auto& sink : rhs.p_sinks)
+                {
+                    lhs.p_sinks.push_back(sink->clone());
+                    //*lhs.p_sinks.back() = *sink;
+                    //lhs.p_sinks.push_back(std::unique_ptr<Sink>(sink));
+                }
+            }
+        }
+
+    private:
+
+        static std::shared_ptr<Logger> globalLogger;
+
+    public:
+
+        friend inline
+        void create();
+
+        friend inline
+        void destroy();
+
+        friend inline
+        std::shared_ptr<Logger>& get();
     };
 
-    //
-    Logger Logger::g_instance;
-    darray<Sink*> Logger::g_sinks;
+    std::shared_ptr<Logger> Logger::globalLogger;
+    std::mutex Logger::mutex;
 
-    //
-    std::ostringstream&& log(Severity severity)
+    inline
+    Logger::State flush()
     {
-        Logger& instance = Logger::instance();
-        instance.p_severity = severity;
-        //std::ostringstream oss;
-        //return instance.p_stream;
-        return std::move(std::ostringstream());// oss;//std::forward(oss);
+        return Logger::State::Flush;
     }
 
-    std::ostringstream&& error()
+    inline
+    Logger log(Severity severity, std::source_location location = std::source_location::current())
     {
-        return log(Error);
-    }
-
-    //
-    LoggerState endl()
-    {
-        return LoggerState::Endline;
-    }
-
-    LoggerState flush()
-    {
-        return LoggerState::Flush;
-    }
-
-    LoggerState exception()
-    {
-        return LoggerState::Exception;
-    }
-
-    LoggerState exit(int code)
-    {
-        Logger& instance = Logger::instance();
-        instance.p_exitcode = code;
-        return LoggerState::Exit;
-    }
-
-
-    std::ostream& operator<<(std::ostream& stream, const LoggerState& state)
-    {
-        stream << std::endl;
-        std::ostringstream oss;
-        oss << stream.rdbuf();
-        std::string test = oss.str();
-        std::cout << test << std::endl;
-        //static std::mutex mtx;
-        //std::lock_guard<std::mutex> lock(mtx);
-        Logger& instance = Logger::instance();
-
-        if (state >= LoggerState::Endline)
+        if (Logger::globalLogger != nullptr)
         {
-            stream << "\n";
+            Logger::globalLogger->severity(severity);
+            Logger logger = *Logger::globalLogger;
+            logger.location(location);
+            return logger;
         }
-
-        //instance.p_stream << stream.rdbuf();
-
-
-        if (state >= LoggerState::Flush)
+        else
         {
-            // default sink
-            if (Logger::sinks().is_empty())
-            {
-                std::unique_ptr<Sink> sink = std::make_unique<StandardOutput>(Logger::severity());
-                sink->addMessage(oss.str());
-                sink->flush();
-                //delete sink;
-            }
-
-            // global sinks
-            for (Sink* sink : Logger::sinks())
-            {
-                sink->addMessage(oss.str());
-                sink->flush();
-            }
+            Logger logger = Logger(severity);
+            logger.location(location);
+            return logger;
         }
-
-        if (state == LoggerState::Exception)
-        {
-            throw std::runtime_error(oss.str());
-        }
-
-        if (state == LoggerState::Exit)
-        {
-            std::exit(instance.p_exitcode);
-        }
-
-        //instance.p_stream.flush();
-        return stream;
     }
-}
+
+    inline
+    void create()
+    {
+        Logger::globalLogger = std::make_shared<Logger>();
+        Logger::globalLogger->p_isGlobal = true;
+    }
+
+    inline
+    void destroy()
+    {
+        if (Logger::globalLogger != nullptr)
+            Logger::globalLogger.reset();
+    }
+
+    inline
+    std::shared_ptr<Logger>& get()
+    {
+        return Logger::globalLogger;
+    }
+
+
+    inline
+    Logger emergency(std::source_location location = std::source_location::current())
+    {
+        return log(Emergency, location);
+    }
+
+    inline
+    Logger alert(std::source_location location = std::source_location::current())
+    {
+        return log(Alert, location);
+    }
+
+    inline
+    Logger critical(std::source_location location = std::source_location::current())
+    {
+        return log(Critical, location);
+    }
+
+    inline
+    Logger error(std::source_location location = std::source_location::current())
+    {
+        return log(Error, location);
+    }
+
+    inline
+    Logger warning(std::source_location location = std::source_location::current())
+    {
+        return log(Warning, location);
+    }
+
+    inline
+    Logger notice(std::source_location location = std::source_location::current())
+    {
+        return log(Notice, location);
+    }
+
+    inline
+    Logger info(std::source_location location = std::source_location::current())
+    {
+        return log(Info, location);
+    }
+
+    inline
+    Logger debug(std::source_location location = std::source_location::current())
+    {
+        return log(Debug, location);
+    }
+
 }

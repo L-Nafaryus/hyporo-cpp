@@ -1,7 +1,8 @@
 #include <gtest/gtest.h>
 
-#include "../logger.hpp"
+#include <hpr/io/logger.hpp>
 #include <thread>
+
 
 void task1()
 {

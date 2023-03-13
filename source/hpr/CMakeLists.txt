@@ -1,22 +1,39 @@
 
-# Modules
-add_subdirectory(core)
-add_subdirectory(containers)
-add_subdirectory(math)
-add_subdirectory(io)
-add_subdirectory(mesh)
-add_subdirectory(geometry)
+# Modules and dependencies
 
-if(WITH_CSG)
-    include(${CMAKE_SOURCE_DIR}/cmake/external/occt.cmake)
+if (HPR_WITH_CONTAINERS)
+    add_subdirectory(containers)
+endif()
+
+if (HPR_WITH_MATH)
+    add_subdirectory(math)
+endif()
+
+if (HPR_WITH_IO)
+    add_subdirectory(io)
+endif()
+
+if (HPR_WITH_MESH)
+    add_subdirectory(mesh)
+endif()
+
+if (HPR_WITH_GEOMETRY)
+    add_subdirectory(geometry)
+endif()
+
+if(HPR_WITH_CSG)
+    include(${HPR_EXTERNAL_PATH}/occt.cmake)
     add_subdirectory(csg)
 endif()
-if(WITH_GPU)
-    include(${CMAKE_SOURCE_DIR}/cmake/external/glad.cmake)
-    include(${CMAKE_SOURCE_DIR}/cmake/external/stb.cmake)
+
+if(HPR_WITH_GPU)
+    include(${HPR_EXTERNAL_PATH}/glad.cmake)
+    include(${HPR_EXTERNAL_PATH}/glfw.cmake)
+    include(${HPR_EXTERNAL_PATH}/stb.cmake)
     add_subdirectory(gpu)
 endif()
-if(WITH_WINDOW_SYSTEM)
-    include(${CMAKE_SOURCE_DIR}/cmake/external/glfw.cmake)
-    add_subdirectory(window_system)
+
+if(HPR_WITH_PARALLEL)
+    include(${HPR_EXTERNAL_PATH}/onetbb.cmake)
+    add_subdirectory(parallel)
 endif()

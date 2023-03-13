@@ -1,68 +1,27 @@
 cmake_minimum_required(VERSION 3.16)
 
 project(io
-        VERSION "${HPR_PROJECT_VERSION}"
-        LANGUAGES CXX
-        )
+    VERSION "${HPR_VERSION}"
+    LANGUAGES CXX
+)
 
-add_library(${PROJECT_NAME})
-add_library(${CMAKE_PROJECT_NAME}::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
-add_module(${PROJECT_NAME})
+hpr_add_library(${PROJECT_NAME} STATIC)
 
-file(GLOB ${CMAKE_PROJECT_NAME}_${PROJECT_NAME}_HEADERS
-        "../io.hpp" "*.hpp"
-        )
+hpr_collect_interface(${PROJECT_NAME}
+    "../io.hpp"
+    "*.hpp"
+)
 
-foreach(_header_path ${${CMAKE_PROJECT_NAME}_${PROJECT_NAME}_HEADERS})
-    list(APPEND ${CMAKE_PROJECT_NAME}_${PROJECT_NAME}_HEADERS_INTERFACE "$<BUILD_INTERFACE:${_header_path}>")
-endforeach()
-
-file(GLOB ${CMAKE_PROJECT_NAME}_${PROJECT_NAME}_SOURCES
-        "*.cpp"
-        )
+hpr_collect_sources(${PROJECT_NAME}
+    "*.cpp"
+)
 
 target_sources(${PROJECT_NAME}
-        INTERFACE
-        ${${CMAKE_PROJECT_NAME}_${PROJECT_NAME}_HEADERS_INTERFACE}
-        $<INSTALL_INTERFACE:include/${CMAKE_PROJECT_NAME}/${PROJECT_NAME}>
-        PRIVATE
-        ${${CMAKE_PROJECT_NAME}_${PROJECT_NAME}_SOURCES}
-        )
-
-install(
-        TARGETS ${PROJECT_NAME}
-        EXPORT ${PROJECT_NAME}Targets
-        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}/${PROJECT_NAME}
-        NAMELINK_SKIP
-        INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-)
-install(
-        EXPORT ${PROJECT_NAME}Targets
-        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${CMAKE_PROJECT_NAME}-${HPR_PROJECT_VERSION}
-        NAMESPACE ${CMAKE_PROJECT_NAME}::
-)
-install(
-        TARGETS ${PROJECT_NAME}
-        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}/${PROJECT_NAME}
-        NAMELINK_ONLY
-        INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-)
-install(
-        DIRECTORY ${PROJECT_SOURCE_DIR}
-        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${CMAKE_PROJECT_NAME}
-        COMPONENT devel
-        FILES_MATCHING
-        PATTERN "*.h"
-        PATTERN "*.hpp"
-        PATTERN "tests" EXCLUDE
-)
-install(
-        FILES ../${PROJECT_NAME}.hpp
-        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${CMAKE_PROJECT_NAME}
-        COMPONENT devel
+    INTERFACE ${${PROJECT_NAME}_HEADERS_INTERFACE} ${HPR_INSTALL_INTERFACE}/${PROJECT_NAME}>
+    PRIVATE ${${PROJECT_NAME}_SOURCES}
 )
 
 
-if(HPR_TEST)
-    add_subdirectory(tests)
-endif()
+hpr_install(${PROJECT_NAME} ${PROJECT_SOURCE_DIR})
+hpr_tests(${PROJECT_NAME} tests)
+

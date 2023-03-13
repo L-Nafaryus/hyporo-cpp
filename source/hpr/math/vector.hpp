@@ -1,4 +1,4 @@
 #pragma once
 
-#include "vector/vector_space.hpp"
+#include <hpr/math/vector/vector.hpp>
 

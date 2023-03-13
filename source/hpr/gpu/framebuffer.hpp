@@ -1,7 +1,8 @@
 #pragma once
 
-#include "texture.hpp"
-#include "renderbuffer.hpp"
+#include <hpr/gpu/texture.hpp>
+#include <hpr/gpu/renderbuffer.hpp>
+
 
 #ifndef __gl_h_
 #include <glad/glad.h>
@@ -25,7 +26,7 @@ public:
     inline
     Framebuffer() :
         p_index {0},
-        p_texture {},
+        p_texture {1, 1}, // non zero
         p_renderbuffer {}
     {}
 
@@ -58,9 +59,9 @@ public:
     void attach(const Texture& texture)
     {
         if (!binded() && valid())
-            std::runtime_error("Framebuffer not binded or invalid");
+            throw std::runtime_error("Framebuffer not binded or invalid");
         if (!texture.valid())
-            std::runtime_error("Texture is not valid");
+            throw std::runtime_error("Texture is not valid");
 
         p_texture = texture;
         p_texture.bind();
@@ -72,17 +73,19 @@ public:
     void attach(const Renderbuffer& renderbuffer)
     {
         if (!binded() && valid())
-            std::runtime_error("Framebuffer not binded or invalid");
+            throw std::runtime_error("Framebuffer not binded or invalid");
         if (!renderbuffer.valid())
-            std::runtime_error("Renderbuffer is not valid");
+            throw std::runtime_error("Renderbuffer is not valid");
 
         p_renderbuffer = renderbuffer;
         p_renderbuffer.bind();
         p_renderbuffer.storage(p_texture.width(), p_texture.height());
         glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, p_renderbuffer.index());
 
+        std::stringstream ss;
+        ss << "Framebuffer is not complete: " << glCheckFramebufferStatus(GL_FRAMEBUFFER);
         if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-            throw std::runtime_error("Framebuffer is not complete");
+            throw std::runtime_error(ss.str());
 
         p_renderbuffer.unbind();
     }
@@ -93,14 +96,30 @@ public:
         bind();
 
         if (!p_texture.valid())
+        {
             p_texture.create();
-        attach(p_texture);
+            attach(p_texture);
+        }
 
         if (!p_renderbuffer.valid())
+        {
             p_renderbuffer.create();
-        attach(p_renderbuffer);
+            attach(p_renderbuffer);
+        }
 
         unbind();
+    }
+
+    void rescale()
+    {
+        p_texture.bind();
+        p_texture.rescale();
+
+        p_renderbuffer.bind();
+        p_renderbuffer.storage(p_texture.width(), p_texture.height());
+
+        p_texture.unbind();
+        p_renderbuffer.unbind();
     }
 
     void rescale(int width, int height)
@@ -122,9 +141,37 @@ public:
         glDeleteFramebuffers(1, &p_index);
     }
 
+    [[nodiscard]]
     bool valid() const
     {
         return p_index != 0;
+    }
+
+    Texture& texture()
+    {
+        return p_texture;
+    }
+
+    int& width()
+    {
+        return p_texture.width();
+    }
+
+    [[nodiscard]]
+    int width() const
+    {
+        return p_texture.width();
+    }
+
+    int& height()
+    {
+        return p_texture.height();
+    }
+
+    [[nodiscard]]
+    int height() const
+    {
+        return p_texture.height();
     }
 };
 

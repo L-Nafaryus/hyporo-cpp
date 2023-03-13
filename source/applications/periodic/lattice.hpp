@@ -89,7 +89,7 @@ public:
         vec3 ox {1, 0, 0};
         vec3 oy {0, 1, 0};
         vec3 oz {0, 0, 1};
-        vec3 ox1 = hpr::rotate(ox, oz, radians(-p_angles[2]));
+        vec3 ox1 = hpr::rotate(ox, oz, rad(-p_angles[2]));
         p_controlPoints.push(vec3{0, 0, 0});
         p_controlPoints.push(vec3{0, p_lengths[0], 0});
         vec3 t1 = hpr::translate(p_controlPoints.back(), ox1 * p_lengths[1]);
@@ -97,29 +97,29 @@ public:
         p_controlPoints.push(hpr::translate(p_controlPoints.front(), ox1 * p_lengths[1]));
         print(t1);
         print(ox1);
-        scalar c1 = cos(radians(p_angles[2])), c2 = cos(radians(p_angles[1])), c3 = cos(radians(p_angles[0]));
-        scalar D1 = sqrt(mat3(
-            1, cos(radians(p_angles[2])), cos(radians(p_angles[1])),
-            cos(radians(p_angles[2])), 1, cos(radians(p_angles[0])),
-            cos(radians(p_angles[1])), cos(radians(p_angles[0])), 1).det());
+        scalar c1 = cos(rad(p_angles[2])), c2 = cos(rad(p_angles[1])), c3 = cos(rad(p_angles[0]));
+        scalar D1 = sqrt(det(mat3(
+            1, cos(rad(p_angles[2])), cos(rad(p_angles[1])),
+            cos(rad(p_angles[2])), 1, cos(rad(p_angles[0])),
+            cos(rad(p_angles[1])), cos(rad(p_angles[0])), 1)));
         scalar volume = 1. / 6. * p_lengths[0] * p_lengths[1] * p_lengths[2] *
             D1;
-        scalar s1 = sqrt(std::pow(p_lengths[0], 2) + std::pow(p_lengths[1], 2) - 2 *
-            p_lengths[0] * p_lengths[1] * cos(radians(p_angles[2])));
-        scalar s2 = sqrt(std::pow(p_lengths[1], 2) + std::pow(p_lengths[2], 2) - 2 *
-            p_lengths[1] * p_lengths[2] * cos(radians(p_angles[1])));
-        scalar s3 = sqrt(std::pow(p_lengths[0], 2) + std::pow(p_lengths[2], 2) - 2 *
-            p_lengths[0] * p_lengths[2] * cos(radians(p_angles[0])));
+        scalar s1 = sqrt(pow(p_lengths[0], 2) + pow(p_lengths[1], 2) - 2 *
+            p_lengths[0] * p_lengths[1] * cos(rad(p_angles[2])));
+        scalar s2 = sqrt(pow(p_lengths[1], 2) + pow(p_lengths[2], 2) - 2 *
+            p_lengths[1] * p_lengths[2] * cos(rad(p_angles[1])));
+        scalar s3 = sqrt(pow(p_lengths[0], 2) + pow(p_lengths[2], 2) - 2 *
+            p_lengths[0] * p_lengths[2] * cos(rad(p_angles[0])));
         scalar area = 1. / 2. * p_lengths[0] * p_lengths[1] *
-            sqrt(mat2{1, cos(radians(p_angles[2])), cos(radians(p_angles[2])), 1}.det());
+            sqrt(det(mat2{1, cos(rad(p_angles[2])), cos(rad(p_angles[2])), 1}));
         scalar h1 = 3 * volume / area;
         scalar a1 = asin(h1 / p_lengths[2]);
-        scalar sh1 = sqrt(std::pow(p_lengths[2], 2) - std::pow(h1, 2));
-        scalar sh2 = p_lengths[2] * cos(radians(p_angles[0]));
+        scalar sh1 = sqrt(pow(p_lengths[2], 2) - pow(h1, 2));
+        scalar sh2 = p_lengths[2] * cos(rad(p_angles[0]));
         scalar a2 = acos(sh2 / sh1);
 
         vec3 ox2 = hpr::rotate(ox, oy, a1);
-        if (!std::isnan(a2))
+        if (!isnan(a2))
             ox2 = hpr::rotate(ox2, oz, a2);
         print(ox2);
         for (auto n = 0; n < 4; ++n)

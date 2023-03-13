@@ -9,7 +9,9 @@ namespace hpr
 template <typename Type, typename Category = std::forward_iterator_tag>
 class Iterator
 {
+
 public:
+
     using iterator_category = Category;
     using difference_type = std::ptrdiff_t;
     using value_type = Type;
@@ -21,6 +23,7 @@ public:
     using const_iterator = Iterator const;
 
 protected:
+
     pointer p_ptr;
 
 public:

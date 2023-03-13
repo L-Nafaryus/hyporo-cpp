@@ -1,0 +1,12 @@
+
+execute_process(
+        COMMAND ldd "@CPACK_PACKAGE_DIRECTORY@/@PROJECT_NAME@.exe"
+        COMMAND grep "mingw"
+        COMMAND cut "-d" " " "-f" "3"
+        COMMAND xargs "cp" "-t" "@CMAKE_INSTALL_BINDIR@"
+        RESULT_VARIABLE EXIT_CODE
+)
+
+if(NOT EXIT_CODE EQUAL 0)
+    message(STATUS "Running pre-build command failed with exit code ${EXIT_CODE}.")
+endif()
