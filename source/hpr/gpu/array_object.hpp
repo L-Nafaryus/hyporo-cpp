@@ -88,6 +88,7 @@ namespace hpr::gpu
         void destroy()
         {
             glDeleteVertexArrays(1, &p_index);
+            p_index = 0;
         }
 
         void attribPointer(BufferObject& buffer, unsigned int location, int size)

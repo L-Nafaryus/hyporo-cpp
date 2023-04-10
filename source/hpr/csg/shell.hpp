@@ -22,7 +22,7 @@ public:
     {}
 
     explicit
-    Shell(const darray<Shape>& faces) :
+    Shell(const darray<Face>& faces) :
         Shape {}
     {
         BRep_Builder builder;
@@ -38,7 +38,6 @@ public:
                 default:
                     throw std::runtime_error("");
             }
-
         p_shape = shell;
     }
 
@@ -46,6 +45,16 @@ public:
     TopoDS_Shell tcast() const
     {
         return TopoDS::Shell(p_shape);
+    }
+
+    static
+    Shell sew(const darray<Face>& faces)
+    {
+        BRepBuilderAPI_Sewing builder;
+        for (const auto& face : faces)
+            builder.Add(face.tshape());
+        builder.Perform();
+        return Shell(builder.SewedShape());
     }
 };
 

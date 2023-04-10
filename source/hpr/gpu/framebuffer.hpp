@@ -139,6 +139,7 @@ public:
         p_texture.destroy();
         p_renderbuffer.destroy();
         glDeleteFramebuffers(1, &p_index);
+        p_index = 0;
     }
 
     [[nodiscard]]

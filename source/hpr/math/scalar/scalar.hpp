@@ -2,6 +2,7 @@
 
 #include <cmath>
 #include <limits>
+#include <numbers>
 #include <hpr/math/integer.hpp>
 
 

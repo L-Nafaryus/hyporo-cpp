@@ -211,6 +211,7 @@ namespace hpr::gpu
         void destroy()
         {
             glDeleteTextures(1, &p_index);
+            p_index = 0;
         }
 
         bool valid() const

@@ -14,16 +14,14 @@ protected:
     hpr::vec3 p_position;
     hpr::quat p_rotation;
     hpr::vec3 p_scale;
+    std::string p_label;
 
 public:
 
+    bool selected;
+
     Entity() :
         Drawable {}
-    {}
-
-    inline explicit
-    Entity(gpu::ShaderProgram* shaderProgram) :
-        Drawable {shaderProgram}
     {}
 
     inline
@@ -52,6 +50,18 @@ public:
         p_rotation *= hpr::quat(axis, angle);
     }
 
+    inline virtual
+    std::string label() const
+    {
+        return p_label;
+    }
+
+    inline virtual
+    void label(const std::string& label)
+    {
+        p_label = label;
+    }
+
     hpr::mat4 model()
     {
         hpr::mat4 model = hpr::mat4::identity();
@@ -62,19 +72,19 @@ public:
     }
 
     inline
-    void render() override
+    void render(gpu::ShaderProgram* shaderProgram) override
     {
-        shaderProgram()->bind();
+        shaderProgram->bind();
         //std::cout << shaderProgram()->index() << std::endl;
 
         //for (auto v : model)
         //    std::cout << v << " ";
         //std::cout << std::endl;
-        shaderProgram()->uniformMatrix<4, 4>("model", 1, true, model().data());
+        shaderProgram->uniformMatrix<4, 4>("model", 1, true, model().data());
 
-        Drawable::render();
+        Drawable::render(shaderProgram);
 
-        shaderProgram()->unbind();
+        shaderProgram->unbind();
     }
 
 };

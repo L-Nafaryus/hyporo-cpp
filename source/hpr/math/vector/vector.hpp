@@ -178,8 +178,8 @@ template <IsReal T, Size S> inline Vector<T, S>& operator/=(Vector<T, S>& lhs, c
 
 template <IsReal T, Size S> inline Vector<T, S> operator+(const Vector<T, S>& lhs, const T& rhs) { Vector<T, S> vs {lhs}; for (Size n = 0; n < S; ++n) vs[n] += rhs; return vs; }
 template <IsReal T, Size S> inline Vector<T, S> operator-(const Vector<T, S>& lhs, const T& rhs) { Vector<T, S> vs {lhs}; for (Size n = 0; n < S; ++n) vs[n] -= rhs; return vs; }
-template <IsReal T, Size S> inline Vector<T, S> operator*(const Vector<T, S>& lhs, const T& rhs) { Vector<T, S> vs {lhs}; for (Size n = 0; n < S; ++n) vs[n] *= rhs; return vs; }
-template <IsReal T, Size S> inline Vector<T, S> operator/(const Vector<T, S>& lhs, const T& rhs) { Vector<T, S> vs {lhs}; for (Size n = 0; n < S; ++n) vs[n] /= rhs; return vs; }
+template <IsReal T, IsReal T2, Size S> inline Vector<T, S> operator*(const Vector<T, S>& lhs, const T2& rhs) { Vector<T, S> vs {lhs}; for (Size n = 0; n < S; ++n) vs[n] *= static_cast<T>(rhs); return vs; }
+template <IsReal T, IsReal T2, Size S> inline Vector<T, S> operator/(const Vector<T, S>& lhs, const T2& rhs) { Vector<T, S> vs {lhs}; for (Size n = 0; n < S; ++n) vs[n] /= static_cast<T>(rhs); return vs; }
 
 template <IsReal T, Size S> inline Vector<T, S> operator+(const T& lhs, const Vector<T, S>& rhs) { Vector<T, S> vs {rhs}; for (Size n = 0; n < S; ++n) vs[n] += lhs; return vs; }
 template <IsReal T, Size S> inline Vector<T, S> operator-(const T& lhs, const Vector<T, S>& rhs) { Vector<T, S> vs {rhs}; for (Size n = 0; n < S; ++n) vs[n] -= lhs; return vs; }

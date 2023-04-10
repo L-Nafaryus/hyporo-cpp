@@ -123,6 +123,7 @@ public:
     void destroy()
     {
         glDeleteShader(p_index);
+        p_index = 0;
     }
 };
 

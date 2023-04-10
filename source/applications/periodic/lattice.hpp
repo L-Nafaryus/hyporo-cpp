@@ -10,12 +10,12 @@ void prints(scalar point)
 {
     std::cout << point << std::endl;
 }
-class Lattice : public csg::Shape
+class Lattice //: public csg::Shape
 {
 
 public:
 
-    enum class System
+    enum LatticeSystem
     {
         Triclinic,
         Monoclinic,
@@ -27,47 +27,44 @@ public:
         Unknown
     };
 
-    enum class Type
+    enum LatticeType
     {
         Primitive,
         BaseCentered,
         BodyCentered,
-        FaceCentered,
-        Unknown
+        FaceCentered
     };
 
 protected:
 
     vec3 p_lengths;
     vec3 p_angles;
-    Type p_type;
+    LatticeType p_type;
     scalar p_radius;
-    darray<vec3> p_controlPoints;
+    Vector<unsigned int, 3> p_cluster;
+    darray<vec3> p_cornerPoints;
+    darray<vec3> p_faceBodyPoints;
 
 public:
 
     Lattice() = delete;
 
-    Lattice(const vec3& lengths, const vec3& angles, scalar radius, Type type) :
-        csg::Shape {},
-        p_lengths {lengths},
-        p_angles {angles},
-        p_radius {radius},
-        p_type {type}
-    {
-        generateControlPoints();
-        darray<csg::Shape> spheres;
-        for (const auto& point : controlPoints()) {
-            spheres.push(csg::sphere(point, p_radius));
-            print(point);
-        }
+    Lattice(LatticeType ltype) : //const vec3& lengths, const vec3& angles, scalar radius, LatticeType ltype) :
+        //csg::Shape {},
+        p_lengths {},//{lengths},
+        p_angles {},//{angles},
+        p_radius {},//{radius},
+        p_type {ltype}
+    {}
 
-        p_shape = csg::Compound(spheres).tshape();//csg::fuse({spheres.front()}, spheres.slice(spheres.begin() + 1, spheres.end())).tshape();
+    darray<vec3> cornerPoints() const
+    {
+        return p_cornerPoints;
     }
 
-    darray<vec3> controlPoints() const
+    darray<vec3> faceBodyPoints() const
     {
-        return p_controlPoints;
+        return p_faceBodyPoints;
     }
 
     vec3 lengths() const
@@ -80,125 +77,142 @@ public:
         return p_angles;
     }
 
-    void generateControlPoints()
+    darray<scalar> faceIndices() const
     {
-        if (p_type == Type::Unknown)
-            throw std::runtime_error("Unknown type of lattice");
-        p_controlPoints.resize(14);
-        //
-        vec3 ox {1, 0, 0};
-        vec3 oy {0, 1, 0};
+        return {
+            2, 6, 4, 0,     // x0
+            1, 5, 7, 3,     // x+ 1
+            0, 4, 5, 1,     // y0
+            3, 7, 6, 2,     // y+ 3
+            2, 0, 1, 3,     // z0
+            4, 6, 7, 5      // z+ 5
+        };
+    }
+
+    inline
+    vec3 os1() const
+    {
+        return {1, 0, 0};
+    }
+
+    inline
+    vec3 os2() const
+    {
+        return hpr::rotate(os1(), {0, 0, 1}, rad(p_angles[2]));
+    }
+
+    inline
+    vec3 os3() const
+    {
         vec3 oz {0, 0, 1};
-        vec3 ox1 = hpr::rotate(ox, oz, rad(-p_angles[2]));
-        p_controlPoints.push(vec3{0, 0, 0});
-        p_controlPoints.push(vec3{0, p_lengths[0], 0});
-        vec3 t1 = hpr::translate(p_controlPoints.back(), ox1 * p_lengths[1]);
-        p_controlPoints.push(t1);
-        p_controlPoints.push(hpr::translate(p_controlPoints.front(), ox1 * p_lengths[1]));
-        print(t1);
-        print(ox1);
-        scalar c1 = cos(rad(p_angles[2])), c2 = cos(rad(p_angles[1])), c3 = cos(rad(p_angles[0]));
-        scalar D1 = sqrt(det(mat3(
-            1, cos(rad(p_angles[2])), cos(rad(p_angles[1])),
-            cos(rad(p_angles[2])), 1, cos(rad(p_angles[0])),
-            cos(rad(p_angles[1])), cos(rad(p_angles[0])), 1)));
-        scalar volume = 1. / 6. * p_lengths[0] * p_lengths[1] * p_lengths[2] *
-            D1;
-        scalar s1 = sqrt(pow(p_lengths[0], 2) + pow(p_lengths[1], 2) - 2 *
-            p_lengths[0] * p_lengths[1] * cos(rad(p_angles[2])));
-        scalar s2 = sqrt(pow(p_lengths[1], 2) + pow(p_lengths[2], 2) - 2 *
-            p_lengths[1] * p_lengths[2] * cos(rad(p_angles[1])));
-        scalar s3 = sqrt(pow(p_lengths[0], 2) + pow(p_lengths[2], 2) - 2 *
-            p_lengths[0] * p_lengths[2] * cos(rad(p_angles[0])));
-        scalar area = 1. / 2. * p_lengths[0] * p_lengths[1] *
-            sqrt(det(mat2{1, cos(rad(p_angles[2])), cos(rad(p_angles[2])), 1}));
-        scalar h1 = 3 * volume / area;
-        scalar a1 = asin(h1 / p_lengths[2]);
-        scalar sh1 = sqrt(pow(p_lengths[2], 2) - pow(h1, 2));
-        scalar sh2 = p_lengths[2] * cos(rad(p_angles[0]));
-        scalar a2 = acos(sh2 / sh1);
+        vec3 os3_ = hpr::rotate(os1(), oz, rad(0.5 * p_angles[2]));
+        scalar gamma = asin(sqrt(1 - 3 * pow(cos(rad(p_angles[0])), 2) + 2 * pow(cos(rad(p_angles[0])), 3)) / sin(rad(p_angles[0])));
 
-        vec3 ox2 = hpr::rotate(ox, oy, a1);
-        if (!isnan(a2))
-            ox2 = hpr::rotate(ox2, oz, a2);
-        print(ox2);
+        return hpr::rotate(os3_, hpr::rotate(os3_, oz, rad(90)), -gamma);
+    }
+
+    void generateControlPoints(const vec3& lengths, const vec3& angles)
+    {
+        p_angles = angles;
+        p_lengths = lengths;
+
+        auto translatePoint = [](const hpr::vec3& v1, const hpr::vec3& v2)
+        {
+            return hpr::vec3(hpr::translate(hpr::mat4::identity(), v2) * hpr::vec4(v1, 1.0f));
+        };
+
+        if (!p_cornerPoints.is_empty())
+            p_cornerPoints.clear();
+        if (!p_faceBodyPoints.is_empty())
+            p_faceBodyPoints.clear();
+
+        p_cornerPoints.resize(8);
+        p_faceBodyPoints.resize(7);
+
+        // p_corner points
+        p_cornerPoints.push(vec3{0, 0, 0});
+        p_cornerPoints.push(vec3(lengths[0], 0, 0));
+        p_cornerPoints.push(translatePoint(p_cornerPoints[0], os2() * lengths[1]));
+        p_cornerPoints.push(translatePoint(p_cornerPoints[1], os2() * lengths[1]));
+
         for (auto n = 0; n < 4; ++n)
-            p_controlPoints.push(hpr::translate(p_controlPoints[n], ox2 * p_lengths[2]));
+            p_cornerPoints.push(translatePoint(p_cornerPoints[n], os3() * lengths[2]));
 
-        /*p_controlPoints.push(vec3{p_lengths[0], p_lengths[1], 0});
-        p_controlPoints.push(vec3{p_lengths[0], 0, 0});
-
-        p_controlPoints.push(vec3{0, 0, p_lengths[2]});
-        p_controlPoints.push(vec3{0, p_lengths[1], p_lengths[2]});
-        p_controlPoints.push(vec3{p_lengths[0], p_lengths[1], p_lengths[2]});
-        p_controlPoints.push(vec3{p_lengths[0], 0, p_lengths[2]});
-
+        // face/body points
         // central points on base faces
-        if (p_type == Type::BaseCentered || p_type == Type::FaceCentered)
+        if (p_type == BaseCentered || p_type == FaceCentered)
         {
             for (int n = 0; n < 2; ++n)
             {
                 vec3 center;
                 for (int k = 0; k < 4; ++k)
-                    center += p_controlPoints[k + 4 * n];
-                p_controlPoints.push(center * 0.25);
+                    center += p_cornerPoints[static_cast<Size>(faceIndices()[k + 4 * (n + 4)])];
+                p_faceBodyPoints.push(center * 0.25);
             }
         }
 
         // central point (center of mass)
-        if (p_type == Type::BodyCentered)
+        if (p_type == BodyCentered)
         {
-            vec3 center;
-            for (const auto& point : p_controlPoints)
-                center += point;
-            p_controlPoints.push(center / p_controlPoints.size());
+            p_faceBodyPoints.push(sum(p_cornerPoints) / p_cornerPoints.size());
         }
 
         // central points on side faces
-        if (p_type == Type::FaceCentered)
+        if (p_type == FaceCentered)
         {
-            for (int n = 0; n < 3; ++n)
+            for (int n = 0; n < 4; ++n)
             {
                 vec3 center;
-                for (int k = 0; k < 2; ++k)
-                {
-                    center += p_controlPoints[n + k];
-                    center += p_controlPoints[n + k + 4];
-                }
-                p_controlPoints.push(center * 0.25);
+                for (int k = 0; k < 4; ++k)
+                    center += p_cornerPoints[static_cast<Size>(faceIndices()[k + n * 4])];
+                p_faceBodyPoints.push(center * 0.25);
             }
-            vec3 center;
-            for (int n = 0; n < 2; ++n)
-            {
-                center += p_controlPoints[n * 3];
-                center += p_controlPoints[4 + n * 3];
+        }
+    }
+
+    Shape operator()(const vec3& lengths, const vec3& angles, scalar radius)
+    {
+        generateControlPoints(lengths, angles);
+
+        darray<csg::Shape> args;
+        darray<csg::Shape> tools;
+        bool skip = false;
+
+        for (const auto& point : cornerPoints())
+        {
+            if (!skip) {
+                args.push(csg::sphere(point, radius));
+                skip = true;
             }
-            p_controlPoints.push(center * 0.25);
+            else
+                tools.push(csg::sphere(point, radius));
         }
 
-        mat4 trans = mat4::identity();
-        vec3 ox {1, 0, 0};
-        vec3 oy {0, 1, 0};
-        vec3 oz {0, 0, 1};
-        int n = 0;
-        for (auto& point : p_controlPoints)
-        {
-            if (n == 0 || n == 3)
-            {
-                ++n;
-                continue;
-            }
-            trans.row(3, vec4(point, 0));
-            trans = hpr::rotate(trans, oz, -radians(90 - p_angles[2]));
-            if (n >= 4 && n <= 7)
-            {
-                trans = hpr::rotate(trans, ox, -radians(90 - p_angles[1]));
-                trans = hpr::rotate(trans, oy, -radians(90 - p_angles[0]));
-            }
-            point = vec3(trans.row(3)[0], trans.row(3)[1], trans.row(3)[2]);
-            ++n;
-        }*/
+        for (const auto& point : faceBodyPoints()) {
+            tools.push(csg::sphere(point, radius));
+        }
 
+        return csg::fuse(args, tools).tshape();
+        //args.push(tools);
+        //return Compound(args);
+    }
+
+    Shape box() const
+    {
+        darray<Face> faces;
+
+        for (auto n = 0; n < 6; ++n)
+        {
+            darray<Edge> edges;
+
+            edges.push(Edge(cornerPoints()[faceIndices()[0 + n * 4]], cornerPoints()[faceIndices()[1 + n * 4]]));
+            edges.push(Edge(cornerPoints()[faceIndices()[1 + n * 4]], cornerPoints()[faceIndices()[2 + n * 4]]));
+            edges.push(Edge(cornerPoints()[faceIndices()[2 + n * 4]], cornerPoints()[faceIndices()[3 + n * 4]]));
+            edges.push(Edge(cornerPoints()[faceIndices()[3 + n * 4]], cornerPoints()[faceIndices()[0 + n * 4]]));
+            faces.push(Face(edges));
+        }
+
+        return Solid(Shell::sew(faces));
     }
 };
 

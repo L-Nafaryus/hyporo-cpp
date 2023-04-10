@@ -37,17 +37,17 @@ public:
 
     void fromScreen(int x, int y, int width, int height, Camera* camera, Entity* entity)
     {
-        /*vec4 start {2.f * (float)x / (float)width - 1.f, 2.f * (float)y / (float)height - 1.f, 0.f, 1.f};
+        vec4 start {2.f * (float)x / (float)width - 1.f, 2.f * (float)y / (float)height - 1.f, 0.f, 1.f};
         vec4 end {2.f * (float)x / (float)width - 1.f, 2.f * (float)y / (float)height - 1.f, 1.f, 1.f};
 
         mat4 invPV = inv(transpose(camera->projection()) * transpose(camera->view()));
         vec4 startWorld = invPV * start;
         startWorld /= startWorld[3];
         vec4 endWorld = invPV * end;
-        endWorld /= endWorld[3];*/
+        endWorld /= endWorld[3];
 
         
-        vec3 end = unproject(vec3(x, y, 0), entity->model(), camera->projection(), vec4(0, 0, width, height));
+        //vec3 end = unproject(vec3(x, y, 0), entity->model(), camera->projection(), vec4(0, 0, width, height));
 
         p_position = vec3(startWorld);
         p_direction = normalize(vec3(endWorld - startWorld));

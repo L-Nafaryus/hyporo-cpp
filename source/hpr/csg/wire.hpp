@@ -22,7 +22,7 @@ public:
     {}
 
     explicit
-    Wire(const darray<Shape>& edges) :
+    Wire(const darray<Edge>& edges) :
         Shape {}
     {
         BRepBuilderAPI_MakeWire builder;

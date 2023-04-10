@@ -33,7 +33,7 @@ endif()
 
 
 add_executable(hyporo-creator
-    test2.cpp
+    test3.cpp
 )
 
 target_link_libraries(hyporo-creator
@@ -41,6 +41,8 @@ target_link_libraries(hyporo-creator
     imgui::imgui
     implot::implot
     glm::glm
+    hpr::csg
+    hpr::mesh
 )
 
 target_link_libraries(hyporo-creator -static gcc stdc++ winpthread -dynamic)

@@ -25,13 +25,14 @@ namespace hpr::csg
         Solid(const Shell& shell) :
             Shape {}
         {
-            BRep_Builder builder;
+            /*BRep_Builder builder;
             TopoDS_Solid solid;
 
             builder.MakeSolid(solid);
-            builder.Add(solid, shell.tcast());
-
-            p_shape = solid;
+            builder.Add(solid, shell.tcast());*/
+            BRepBuilderAPI_MakeSolid builder {shell.tcast()};
+            //p_shape = solid;
+            p_shape = builder.Shape();
         }
 
         [[nodiscard]]

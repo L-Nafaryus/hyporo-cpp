@@ -27,7 +27,7 @@ public:
     {}
 
     explicit
-    Face(const darray<Shape>& edges) :
+    Face(const darray<Edge>& edges) :
         Face {Wire(edges)}
     {}
 

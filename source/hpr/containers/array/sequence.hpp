@@ -22,6 +22,11 @@ template <typename T>
 struct is_sequence<Sequence<T>> : public std::true_type
 {};
 
+// concepts
+
+template <typename Type>
+concept IsSequence = is_sequence<Type>::value;
+
 // class definition
 
 template <typename T>
@@ -100,7 +105,7 @@ public:
     template <typename Iter>
     constexpr
     Sequence(Iter start, Iter end) :
-        p_size {static_cast<size_type>(std::distance(start, end))},//size_type(end.operator->() - start.operator->())},
+        p_size {static_cast<size_type>(std::distance(start, end))},
         p_capacity {p_size},
         p_start {p_capacity ? new value_type[p_capacity] : nullptr}
     {
@@ -109,7 +114,7 @@ public:
 
     constexpr
     Sequence(iterator start, iterator end) :
-        p_size {static_cast<size_type>(std::distance(start, end))},//size_type(end.operator->() - start.operator->())},
+        p_size {static_cast<size_type>(std::distance(start, end))},
         p_capacity {p_size},
         p_start {p_capacity ? new value_type[p_capacity] : nullptr}
     {
@@ -118,7 +123,7 @@ public:
 
     constexpr
     Sequence(const_iterator start, const_iterator end) :
-        p_size {std::distance(start, end)},//{size_type(end.operator->() - start.operator->())},
+        p_size {static_cast<size_type>(std::distance(start, end))},
         p_capacity {p_size},
         p_start {p_capacity ? new value_type[p_capacity] : nullptr}
     {
@@ -127,7 +132,7 @@ public:
 
     constexpr
     Sequence(iterator start, iterator end, size_type capacity) :
-        p_size {static_cast<size_type>(std::distance(start, end))},//size_type(end.operator->() - start.operator->())},
+        p_size {static_cast<size_type>(std::distance(start, end))},
         p_capacity {capacity},
         p_start {p_capacity ? new value_type[p_capacity] : nullptr}
     {
@@ -136,7 +141,7 @@ public:
 
     constexpr
     Sequence(const_iterator start, const_iterator end, size_type capacity) :
-        p_size {std::distance(start, end)},//{size_type(end.operator->() - start.operator->())},
+        p_size {static_cast<size_type>(std::distance(start, end))},
         p_capacity {capacity},
         p_start {p_capacity ? new value_type[p_capacity] : nullptr}
     {

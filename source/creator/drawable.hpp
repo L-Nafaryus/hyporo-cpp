@@ -3,7 +3,7 @@
 #include <hpr/gpu.hpp>
 #include <hpr/math.hpp>
 
-using hpr::darray;
+using namespace hpr;
 
 class Drawable
 {
@@ -16,8 +16,6 @@ protected:
     gpu::BufferObject p_normalBuffer;
     gpu::BufferObject p_colorBuffer;
     gpu::BufferObject p_indexBuffer;
-
-    gpu::ShaderProgram* p_shaderProgram;
 
     gpu::ArrayObject::Mode p_renderMode;
 
@@ -41,19 +39,6 @@ public:
         p_normalBuffer {gpu::BufferObject::Vertex},
         p_colorBuffer {gpu::BufferObject::Vertex},
         p_indexBuffer {gpu::BufferObject::Index},
-        p_shaderProgram {nullptr},
-        p_renderMode {gpu::ArrayObject::Triangles},
-        p_color {0.7, 0.7, 0.7}
-    {}
-
-    inline explicit
-    Drawable(gpu::ShaderProgram* shaderProgram) :
-        p_arrayObject {},
-        p_vertexBuffer {gpu::BufferObject::Vertex},
-        p_normalBuffer {gpu::BufferObject::Vertex},
-        p_colorBuffer {gpu::BufferObject::Vertex},
-        p_indexBuffer {gpu::BufferObject::Index},
-        p_shaderProgram {shaderProgram},
         p_renderMode {gpu::ArrayObject::Triangles},
         p_color {0.7, 0.7, 0.7}
     {}
@@ -71,13 +56,6 @@ public:
         p_normalBuffer.destroy();
         p_colorBuffer.destroy();
         p_indexBuffer.destroy();
-    }
-
-    [[nodiscard]]
-    constexpr
-    gpu::ShaderProgram* shaderProgram() const
-    {
-        return p_shaderProgram;
     }
 
     constexpr virtual
@@ -195,15 +173,15 @@ public:
     }
 
     inline virtual
-    void render(gpu::ArrayObject::Mode mode)
+    void render(gpu::ShaderProgram* shaderProgram, gpu::ArrayObject::Mode mode)
     {
-        p_shaderProgram->bind();
+        shaderProgram->bind();
         //std::cout << p_shaderProgram->index() << std::endl;
         p_arrayObject.bind();
 
         if (!p_colorBuffer.valid()) {
 
-            shaderProgram()->uniformVector<float, 4>("objectColor", 1, p_color.data());
+            shaderProgram->uniformVector<float, 4>("objectColor", 1, p_color.data());
         }
         if (p_indexBuffer.valid())
         {
@@ -215,13 +193,13 @@ public:
             p_arrayObject.drawArrays(mode, p_vertexBuffer.size());
         }
         p_arrayObject.unbind();
-        p_shaderProgram->unbind();
+        shaderProgram->unbind();
     }
 
     inline virtual
-    void render()
+    void render(gpu::ShaderProgram* shaderProgram)
     {
-        render(p_renderMode);
+        render(shaderProgram, p_renderMode);
     }
 
     inline virtual

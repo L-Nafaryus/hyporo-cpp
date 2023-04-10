@@ -58,6 +58,7 @@ namespace hpr::gpu
         void destroy()
         {
             glDeleteRenderbuffers(1, &p_index);
+            p_index = 0;
         }
 
         bool valid() const

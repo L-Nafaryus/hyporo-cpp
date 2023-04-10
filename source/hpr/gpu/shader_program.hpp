@@ -78,6 +78,7 @@ namespace hpr::gpu
         void destroy()
         {
             glDeleteProgram(p_index);
+            p_index = 0;
         }
 
         void bind()

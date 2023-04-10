@@ -26,6 +26,9 @@
 #include <BRepBuilderAPI_MakeEdge.hxx>
 #include <BRepBuilderAPI_MakeWire.hxx>
 #include <BRepBuilderAPI_MakeFace.hxx>
+#include <BRepBuilderAPI_MakeShell.hxx>
+#include <BRepBuilderAPI_MakeSolid.hxx>
+#include <BRepBuilderAPI_Sewing.hxx>
 #include <BRep_Builder.hxx>
 
 #include <BRepBndLib.hxx>
@@ -38,6 +41,7 @@
 #include <BRepExtrema_DistShapeShape.hxx>
 
 #include <BRepBuilderAPI_Transform.hxx>
+#include <BRepBuilderAPI_GTransform.hxx>
 #include <BRepFilletAPI_MakeFillet.hxx>
 
 #include <BRepAlgoAPI_Fuse.hxx>
@@ -65,6 +69,7 @@
 #include <ShapeFix_Face.hxx>
 
 
+
 namespace hpr::csg
 {
     class Shape;
@@ -81,19 +86,6 @@ namespace std
 
 namespace hpr::csg
 {
-
-// Forward declaration of friend functions
-
-double distance(const Shape& lhs, const Shape& rhs);
-
-Shape fuse(const Shape& lhs, const Shape& rhs);
-
-Shape fuse(const darray<Shape>& args, const darray<Shape>& tools);
-
-Shape common(const Shape& lhs, const Shape& rhs);
-
-Shape cut(const Shape& lhs, const Shape& rhs);
-
 
 // Class declaration
 
@@ -221,7 +213,7 @@ public:
 
         gp_Pnt center {props.CentreOfMass()};
 
-        return vec3 {center.X(), center.Y(), center.Z()};
+        return vec3 {static_cast<scalar>(center.X()), static_cast<scalar>(center.Y()), static_cast<scalar>(center.Z())};
     }
 
     [[nodiscard]]
@@ -318,7 +310,10 @@ public:
         gp_Pnt p1 {bbox.CornerMin()};
         gp_Pnt p2 {bbox.CornerMax()};
 
-        return sarray<vec3, 2> {{p1.X(), p1.Y(), p1.Z()}, {p2.X(), p2.Y(), p2.Z()}};
+        return sarray<vec3, 2> {
+            {static_cast<scalar>(p1.X()), static_cast<scalar>(p1.Y()), static_cast<scalar>(p1.Z())},
+            {static_cast<scalar>(p2.X()), static_cast<scalar>(p2.Y()), static_cast<scalar>(p2.Z())}
+        };
     }
 
     void incrementalMesh(double deflection)
@@ -329,10 +324,10 @@ public:
 
     darray<Shape> subShapes(Type type) const
     {
-        darray<Shape> subshapes;
+        darray<Shape> shapes;
         for (TopExp_Explorer exp(p_shape, static_cast<TopAbs_ShapeEnum>(type)); exp.More(); exp.Next())
-            subshapes.push(Shape(exp.Current()));
-        return subshapes;
+            shapes.push(Shape(exp.Current()));
+        return shapes;
     }
 
     darray<Shape> edges() const
@@ -350,140 +345,20 @@ public:
         return subShapes(Type::Shell);
     }
 
-    // Member functions: transformations
 
-    Shape translate(const vec3& dir)
-    {
-        gp_Trsf transform;
-        transform.SetTranslation(gp_Vec(dir[0], dir[1], dir[2]));
-        BRepBuilderAPI_Transform builder {p_shape, transform, true};
 
-        return builder.Shape();
-    }
 
-    Shape rotate(const vec3& pos, const vec3& axis, double angle)
-    {
-        gp_Trsf transform;
-        transform.SetRotation(gp_Ax1({pos[0], pos[1], pos[2]}, {axis[0], axis[1], axis[2]}), rad(angle));
-        BRepBuilderAPI_Transform builder {p_shape, transform, true};
-
-        return builder.Shape();
-    }
-
-    Shape scale(const vec3& center, double scale)
-    {
-        gp_Trsf transform;
-        transform.SetScale(gp_Pnt(center[0], center[1], center[2]), scale);
-        BRepBuilderAPI_Transform builder {p_shape, transform, true};
-
-        return builder.Shape();
-    }
-
-    Shape& scaled(const vec3& center, double scale)
-    {
-        p_shape = this->scale(center, scale).p_shape;
-        return *this;
-    }
-
-    Shape extrude(const vec3& dir, double length)
-    {
-        BRepPrimAPI_MakePrism builder {p_shape, length * gp_Vec(dir[0], dir[1], dir[2]), true};
-
-        for (auto& type : { Type::Solid, Type::Face, Type::Edge, Type::Vertex })
-            for (TopExp_Explorer exp {p_shape, static_cast<TopAbs_ShapeEnum>(type)}; exp.More(); exp.Next())
-            {
-                auto data = metadata[Shape(exp.Current())];
-
-                for (auto& mod : builder.Generated(exp.Current()))
-                    metadata[Shape(mod)].merge(data);
-            }
-
-        return builder.Shape();
-    }
-
-    Shape fillet(darray<Shape> edges, double radius)
-    {
-        BRepFilletAPI_MakeFillet fillet {p_shape};
-
-        for (auto& e : edges)
-            fillet.Add(radius, TopoDS::Edge(e.p_shape));
-        fillet.Build();
-
-        return fillet.Shape();
-    }
-
-    // Friend functions
-
-    friend
-    double distance(const Shape& lhs, const Shape& rhs)
-    {
-        return BRepExtrema_DistShapeShape(lhs.tshape(), rhs.tshape()).Value();
-    }
-
-    friend
-    Shape fuse(const Shape& lhs, const Shape& rhs)
-    {
-        BRepAlgoAPI_Fuse builder {lhs.p_shape, rhs.p_shape};
-        builder.Build();
-        return Shape {builder.Shape()};
-    }
-
-    friend
-    Shape fuse(const darray<Shape>& args, const darray<Shape>& tools)
-    {
-        BRepAlgoAPI_Fuse builder;
-        NCollection_List<TopoDS_Shape> args_, tools_;
-        for (auto& arg : args)
-            args_.Append(arg.tshape());
-        for (auto& tool : tools)
-            tools_.Append(tool.tshape());
-        builder.SetArguments(args_);
-        builder.SetTools(tools_);
-        builder.Build();
-        return Shape {builder.Shape()};
-    }
-
-    friend
-    Shape common(const Shape& lhs, const Shape& rhs)
-    {
-        BRepAlgoAPI_Common builder {lhs.p_shape, rhs.p_shape};
-        builder.Build();
-        return Shape {builder.Shape()};
-    }
-
-    friend
-    Shape cut(const Shape& lhs, const Shape& rhs)
-    {
-        BRepAlgoAPI_Cut builder {lhs.p_shape, rhs.p_shape};
-        builder.Build();
-        for (auto& type : { Type::Solid, Type::Face, Type::Edge, Type::Vertex })
-            for (TopExp_Explorer exp {lhs.p_shape, static_cast<TopAbs_ShapeEnum>(type)}; exp.More(); exp.Next())
-            {
-                auto data = metadata[Shape(exp.Current())];
-
-                for (auto& mod : builder.Modified(exp.Current()))
-                    metadata[Shape(mod)].merge(data);
-            }
-        for (auto& type : { Type::Solid, Type::Face, Type::Edge, Type::Vertex })
-            for (TopExp_Explorer exp {rhs.p_shape, static_cast<TopAbs_ShapeEnum>(type)}; exp.More(); exp.Next())
-            {
-                auto data = metadata[Shape(exp.Current())];
-
-                for (auto& mod : builder.Modified(exp.Current()))
-                    metadata[Shape(mod)].merge(data);
-            }
-        return Shape {builder.Shape()};
-    }
 
 };
 
-// Global functions: primitives
-
-Shape sphere(vec3 center, double radius);
-
-Shape box(vec3 corner, double dx, double dy, double dz);
+double distance(const Shape& lhs, const Shape& rhs)
+{
+    return BRepExtrema_DistShapeShape(lhs.tshape(), rhs.tshape()).Value();
+}
 
 }
+
+
 
 
 

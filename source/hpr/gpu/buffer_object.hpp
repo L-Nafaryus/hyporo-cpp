@@ -140,6 +140,7 @@ public:
             throw std::runtime_error("Unknown buffer type");
 
         glDeleteBuffers(1, &p_index);
+        p_index = 0;
     }
 
     [[nodiscard]]

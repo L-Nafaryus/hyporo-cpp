@@ -179,6 +179,7 @@ public:
     void title(const std::string& title)
     {
         p_title = title;
+        glfwSetWindowTitle(p_instance, p_title.data());
     }
 
     inline
@@ -243,6 +244,12 @@ public:
     }
 
     inline
+    bool shouldClose() const
+    {
+        return glfwWindowShouldClose(p_instance);
+    }
+
+    inline
     void destroy()
     {
         glfwDestroyWindow(p_instance);
@@ -259,6 +266,15 @@ public:
     void pollEvents()
     {
         glfwPollEvents();
+    }
+
+    inline
+    void icon(const std::string& filename)
+    {
+        GLFWimage images[1];
+        images[0].pixels = stbi_load(filename.data(), &images[0].width, &images[0].height, 0, 4); //rgba channels
+        glfwSetWindowIcon(p_instance, 1, images);
+        stbi_image_free(images[0].pixels);
     }
 
 protected:

@@ -83,6 +83,7 @@ public:
     {
         return p_position;
     }
+
 };
 
 class OrbitCamera : public Camera

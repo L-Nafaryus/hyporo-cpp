@@ -64,6 +64,11 @@ public:
         base {b}
     {}
 
+    constexpr explicit
+    DynamicArray(base&& b) noexcept :
+        base {std::forward<base>(b)}
+    {}
+
     constexpr
     DynamicArray(const DynamicArray& arr) noexcept :
         base {static_cast<base>(arr)}
@@ -110,6 +115,13 @@ public:
     DynamicArray(size_type size, value_type value) noexcept :
         base {size, value}
     {}
+
+    constexpr
+    DynamicArray& operator=(base other) noexcept
+    {
+        swap(*this, other);
+        return *this;
+    }
 
     constexpr
     DynamicArray& operator=(DynamicArray other) noexcept
